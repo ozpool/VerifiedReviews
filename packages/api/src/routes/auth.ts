@@ -6,6 +6,8 @@ import { signToken } from '../auth/jwt';
 import { verifyPassword } from '../auth/password';
 import { NonceModel } from '../models/nonce.model';
 import { AdminModel } from '../models/admin.model';
+import { BusinessModel } from '../models/business.model';
+import { StaffModel } from '../models/staff.model';
 import { validateBody } from './../middleware/validate';
 import { loadConfig } from '../config';
 import { unauthorized } from '../errors';
@@ -55,6 +57,47 @@ authRouter.post('/auth/admin/login', validateBody(loginSchema), async (req, res,
     }
     const token = signToken({ sub: admin.id, role: 'admin' }, loadConfig().JWT_SECRET);
     res.json({ token });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** Business-owner login. Only approved businesses can sign in. */
+authRouter.post('/auth/business/login', validateBody(loginSchema), async (req, res, next) => {
+  try {
+    const { email, password } = req.body as z.infer<typeof loginSchema>;
+    const business = await BusinessModel.findOne({ ownerEmail: email.toLowerCase() });
+    if (
+      !business ||
+      business.status !== 'approved' ||
+      business.businessId === undefined ||
+      !(await verifyPassword(password, business.ownerPasswordHash))
+    ) {
+      throw unauthorized('Invalid credentials or business not approved');
+    }
+    const token = signToken(
+      { sub: business.id, role: 'owner', businessId: business.businessId },
+      loadConfig().JWT_SECRET,
+    );
+    res.json({ token, businessId: business.businessId });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** Staff login. */
+authRouter.post('/auth/staff/login', validateBody(loginSchema), async (req, res, next) => {
+  try {
+    const { email, password } = req.body as z.infer<typeof loginSchema>;
+    const staff = await StaffModel.findOne({ email: email.toLowerCase(), active: true });
+    if (!staff || !(await verifyPassword(password, staff.passwordHash))) {
+      throw unauthorized('Invalid credentials');
+    }
+    const token = signToken(
+      { sub: staff.id, role: 'staff', businessId: staff.businessId },
+      loadConfig().JWT_SECRET,
+    );
+    res.json({ token, businessId: staff.businessId });
   } catch (err) {
     next(err);
   }

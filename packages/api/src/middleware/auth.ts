@@ -41,3 +41,21 @@ export function requireRole(...roles: Role[]): RequestHandler {
     next();
   };
 }
+
+/**
+ * Require the caller to be scoped to the `:businessId` route param (an owner or
+ * staff member of that exact business). Blocks one business touching another's
+ * resources.
+ */
+export const requireBusinessScope: RequestHandler = (req, _res, next) => {
+  const user = req.user;
+  if (!user || (user.role !== 'owner' && user.role !== 'staff')) {
+    next(forbidden());
+    return;
+  }
+  if (user.businessId !== Number(req.params.businessId)) {
+    next(forbidden());
+    return;
+  }
+  next();
+};
