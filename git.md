@@ -57,11 +57,9 @@ Branch: `feat/issue-3-visitproof-sbt`
 
 Branch: `feat/issue-4-review-registry`
 
-- `feat(contracts): add ReviewRegistry with SBT holder check`
-- `feat(contracts): enforce 60-day recency window on submit()`
-- `feat(contracts): emit ReviewSubmitted with content hash + rating`
-- `test(contracts): cover gate pass/fail, missing-SBT revert`
-- `test(contracts): cover recency boundary (exactly 60d, 60d+1s)`
+- `feat(contracts): add ReviewRegistry with SBT-holder recency gate`
+- `test(contracts): cover gate pass/fail and missing-SBT revert`
+- `test(contracts): cover recency window boundaries (60d, 60d+1s)`
 
 ### PR #5 — Deploy contracts to Arbitrum Sepolia and publish ABIs
 
