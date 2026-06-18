@@ -5,7 +5,11 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "clean": "hardhat clean"
+    "clean": "hardhat clean",
+    "deploy:local": "hardhat run scripts/deploy.ts",
+    "deploy:arbitrum": "hardhat run scripts/deploy.ts --network arbitrumSepolia",
+    "export-abis": "hardhat run scripts/export-abis.ts",
+    "verify": "hardhat verify --network arbitrumSepolia"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.1.0"
@@ -14,6 +18,7 @@
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/chai": "^4.3.20",
     "chai": "^4.5.0",
+    "dotenv": "^16.4.7",
     "hardhat": "^2.22.17",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
