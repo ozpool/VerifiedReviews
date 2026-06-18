@@ -1,0 +1,55 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { createNonce, extractNonce, verifySiwe } from '../auth/siwe';
+import { signToken } from '../auth/jwt';
+import { verifyPassword } from '../auth/password';
+import { NonceModel } from '../models/nonce.model';
+import { AdminModel } from '../models/admin.model';
+import { validateBody } from './../middleware/validate';
+import { loadConfig } from '../config';
+import { unauthorized } from '../errors';
+
+export const authRouter = Router();
+
+/** Issue a single-use SIWE login nonce. */
+authRouter.get('/auth/nonce', async (_req, res) => {
+  const nonce = createNonce();
+  await NonceModel.create({ value: nonce });
+  res.json({ nonce });
+});
+
+const siweSchema = z.object({ message: z.string().min(1), signature: z.string().min(1) });
+
+/** Verify a SIWE message + signature, consume the nonce, return a customer JWT. */
+authRouter.post('/auth/siwe', validateBody(siweSchema), async (req, res, next) => {
+  try {
+    const { message, signature } = req.body as z.infer<typeof siweSchema>;
+    const nonce = extractNonce(message);
+    // Consume the nonce atomically; if it's gone, the login is stale or replayed.
+    const consumed = await NonceModel.findOneAndDelete({ value: nonce });
+    if (!consumed) throw unauthorized('Invalid or expired nonce');
+
+    const address = await verifySiwe(message, signature, nonce);
+    const token = signToken({ sub: address, role: 'customer' }, loadConfig().JWT_SECRET);
+    res.json({ token, address });
+  } catch (err) {
+    next(err instanceof Error && err.name === 'AppError' ? err : unauthorized('SIWE login failed'));
+  }
+});
+
+const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) });
+
+/** Admin email+password login. */
+authRouter.post('/auth/admin/login', validateBody(loginSchema), async (req, res, next) => {
+  try {
+    const { email, password } = req.body as z.infer<typeof loginSchema>;
+    const admin = await AdminModel.findOne({ email: email.toLowerCase() });
+    if (!admin || !(await verifyPassword(password, admin.get('passwordHash')))) {
+      throw unauthorized('Invalid credentials');
+    }
+    const token = signToken({ sub: admin.id, role: 'admin' }, loadConfig().JWT_SECRET);
+    res.json({ token });
+  } catch (err) {
+    next(err);
+  }
+});

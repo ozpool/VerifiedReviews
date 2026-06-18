@@ -1,5 +1,6 @@
 import express, { type Express } from 'express';
 import { healthRouter } from './routes/health';
+import { authRouter } from './routes/auth';
 import { errorHandler } from './middleware/error-handler';
 
 /**
@@ -11,6 +12,7 @@ export function buildApp(): Express {
   app.use(express.json());
 
   app.use(healthRouter);
+  app.use(authRouter);
 
   // Error handler is mounted last so it catches everything above it.
   app.use(errorHandler);
