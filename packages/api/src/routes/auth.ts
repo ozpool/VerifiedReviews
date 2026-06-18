@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { ARBITRUM_SEPOLIA_CHAIN_ID } from '@vr/shared';
 import { createNonce, extractNonce, verifySiwe } from '../auth/siwe';
 import { signToken } from '../auth/jwt';
 import { verifyPassword } from '../auth/password';
@@ -29,8 +30,13 @@ authRouter.post('/auth/siwe', validateBody(siweSchema), async (req, res, next) =
     const consumed = await NonceModel.findOneAndDelete({ value: nonce });
     if (!consumed) throw unauthorized('Invalid or expired nonce');
 
-    const address = await verifySiwe(message, signature, nonce);
-    const token = signToken({ sub: address, role: 'customer' }, loadConfig().JWT_SECRET);
+    const config = loadConfig();
+    const address = await verifySiwe(message, signature, {
+      nonce,
+      domain: config.APP_DOMAIN,
+      chainId: ARBITRUM_SEPOLIA_CHAIN_ID,
+    });
+    const token = signToken({ sub: address, role: 'customer' }, config.JWT_SECRET);
     res.json({ token, address });
   } catch (err) {
     next(err instanceof Error && err.name === 'AppError' ? err : unauthorized('SIWE login failed'));

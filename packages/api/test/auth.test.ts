@@ -36,14 +36,14 @@ afterAll(async () => {
   await mongo.stop();
 });
 
-async function signedSiwe(nonce: string) {
+async function signedSiwe(nonce: string, overrides: { domain?: string; chainId?: number } = {}) {
   const message = new SiweMessage({
-    domain: 'localhost',
+    domain: overrides.domain ?? 'localhost',
     address: account.address,
     statement: 'Sign in to VerifiedReviews',
     uri: 'http://localhost',
     version: '1',
-    chainId: 421614,
+    chainId: overrides.chainId ?? 421614,
     nonce,
     issuedAt: new Date().toISOString(),
   }).prepareMessage();
@@ -75,6 +75,18 @@ describe('SIWE login', () => {
 
   it('rejects an unknown nonce', async () => {
     const { message, signature } = await signedSiwe('neverissuednonce123456');
+    await request(app).post('/auth/siwe').send({ message, signature }).expect(401);
+  });
+
+  it('rejects a message bound to a different domain', async () => {
+    const { body } = await request(app).get('/auth/nonce').expect(200);
+    const { message, signature } = await signedSiwe(body.nonce, { domain: 'evil.site' });
+    await request(app).post('/auth/siwe').send({ message, signature }).expect(401);
+  });
+
+  it('rejects a message for the wrong chainId', async () => {
+    const { body } = await request(app).get('/auth/nonce').expect(200);
+    const { message, signature } = await signedSiwe(body.nonce, { chainId: 1 });
     await request(app).post('/auth/siwe').send({ message, signature }).expect(401);
   });
 });
