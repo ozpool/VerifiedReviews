@@ -1,0 +1,9 @@
+node_modules
+dist
+.next
+out
+artifacts
+cache
+typechain-types
+coverage
+pnpm-lock.yaml
