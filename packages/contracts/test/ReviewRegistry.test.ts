@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
+import { loadFixture, time } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 
 const BUSINESS_ID = 1n;
@@ -96,6 +96,43 @@ describe('ReviewRegistry', () => {
         registry,
         'ReviewSubmitted',
       );
+    });
+  });
+
+  describe('submit — recency window', () => {
+    it('accepts a review well within the window (30 days later)', async () => {
+      const { sbt, registry, minter, customer } = await loadFixture(deployFixture);
+      await sbt.connect(minter).mint(customer.address, BUSINESS_ID);
+      const [, visitedAt] = await sbt.latestVisitOf(customer.address, BUSINESS_ID);
+
+      await time.setNextBlockTimestamp(visitedAt + SIXTY_DAYS / 2n);
+      await expect(registry.connect(customer).submit(BUSINESS_ID, CONTENT_HASH, 4)).to.emit(
+        registry,
+        'ReviewSubmitted',
+      );
+    });
+
+    it('accepts a review at exactly the 60-day boundary (inclusive)', async () => {
+      const { sbt, registry, minter, customer } = await loadFixture(deployFixture);
+      await sbt.connect(minter).mint(customer.address, BUSINESS_ID);
+      const [, visitedAt] = await sbt.latestVisitOf(customer.address, BUSINESS_ID);
+
+      await time.setNextBlockTimestamp(visitedAt + SIXTY_DAYS);
+      await expect(registry.connect(customer).submit(BUSINESS_ID, CONTENT_HASH, 5)).to.emit(
+        registry,
+        'ReviewSubmitted',
+      );
+    });
+
+    it('reverts one second past the 60-day window', async () => {
+      const { sbt, registry, minter, customer } = await loadFixture(deployFixture);
+      await sbt.connect(minter).mint(customer.address, BUSINESS_ID);
+      const [, visitedAt] = await sbt.latestVisitOf(customer.address, BUSINESS_ID);
+
+      await time.setNextBlockTimestamp(visitedAt + SIXTY_DAYS + 1n);
+      await expect(
+        registry.connect(customer).submit(BUSINESS_ID, CONTENT_HASH, 5),
+      ).to.be.revertedWithCustomError(registry, 'VisitTooOld');
     });
   });
 });
