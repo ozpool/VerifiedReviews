@@ -6,6 +6,7 @@ const configSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
   MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
+  JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

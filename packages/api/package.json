@@ -11,12 +11,18 @@
   },
   "dependencies": {
     "@vr/shared": "workspace:*",
+    "bcryptjs": "^2.4.3",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
+    "siwe": "^2.3.2",
+    "viem": "^2.21.55",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/supertest": "^6.0.2",
     "mongodb-memory-server": "^10.1.2",
     "supertest": "^7.0.0",
