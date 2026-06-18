@@ -23,9 +23,9 @@ search, and convenience; **the API is never a security boundary.**
 
 Two consequences follow:
 
-1. Review text is *not* stored on-chain — only a `keccak256` content hash is
+1. Review text is _not_ stored on-chain — only a `keccak256` content hash is
    committed. The prose lives in MongoDB where it is searchable and moderatable.
-2. The verified-review *count* a business displays is derived from on-chain
+2. The verified-review _count_ a business displays is derived from on-chain
    events, so it is independently auditable. We sign the count for embed widgets
    so a screenshot can't fake it.
 
@@ -93,13 +93,13 @@ from it so the wire contract is defined once.
 
 ## 4. Component responsibilities
 
-| Layer | Owns | Does NOT own |
-|---|---|---|
-| **Customer web** | Browse, review form, my-VisitProofs page, badge preview | Whether a review is allowed — the contract decides |
-| **Staff scanner** | Camera scan of wallet QR, "Mint VisitProof", today's mints | Signing the mint tx — the API does, with the business minter wallet |
-| **API** | SIWE auth, signup + approval, staff JWTs, mint orchestration, indexing, search, signed badge | Any custody (SBTs are non-transferable, no funds) and the review gate |
-| **MongoDB** | Business profiles, staff, full review text + search index, sentiment, badge cache | SBT ownership or expiry — that is on-chain |
-| **Contracts** | Non-transferability, visit timestamps, review-hash commitments, the gate | Review text — just a hash |
+| Layer             | Owns                                                                                         | Does NOT own                                                          |
+| ----------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **Customer web**  | Browse, review form, my-VisitProofs page, badge preview                                      | Whether a review is allowed — the contract decides                    |
+| **Staff scanner** | Camera scan of wallet QR, "Mint VisitProof", today's mints                                   | Signing the mint tx — the API does, with the business minter wallet   |
+| **API**           | SIWE auth, signup + approval, staff JWTs, mint orchestration, indexing, search, signed badge | Any custody (SBTs are non-transferable, no funds) and the review gate |
+| **MongoDB**       | Business profiles, staff, full review text + search index, sentiment, badge cache            | SBT ownership or expiry — that is on-chain                            |
+| **Contracts**     | Non-transferability, visit timestamps, review-hash commitments, the gate                     | Review text — just a hash                                             |
 
 ---
 
@@ -134,22 +134,23 @@ BADGE
 
 ## 6. On-chain vs off-chain
 
-| Data | Lives in | Why |
-|---|---|---|
-| VisitProof ownership | Contract | Soulbound; can't be moved or sold |
-| Visit timestamp | Contract | Needed for the recency gate |
-| Review hash + star rating | Contract event | Tamper-proof commitment |
-| Review prose | Mongo | Searchable; mutable for moderation |
-| Customer display name | Mongo (optional) | Pseudonymous nicety |
-| Business profile, photos | Mongo | Heavily updated |
-| Staff accounts + sessions | Mongo | Standard auth, no chain value |
-| Sentiment / NLP | Mongo | Derived; recompute anytime |
+| Data                      | Lives in         | Why                                |
+| ------------------------- | ---------------- | ---------------------------------- |
+| VisitProof ownership      | Contract         | Soulbound; can't be moved or sold  |
+| Visit timestamp           | Contract         | Needed for the recency gate        |
+| Review hash + star rating | Contract event   | Tamper-proof commitment            |
+| Review prose              | Mongo            | Searchable; mutable for moderation |
+| Customer display name     | Mongo (optional) | Pseudonymous nicety                |
+| Business profile, photos  | Mongo            | Heavily updated                    |
+| Staff accounts + sessions | Mongo            | Standard auth, no chain value      |
+| Sentiment / NLP           | Mongo            | Derived; recompute anytime         |
 
 ---
 
 ## 7. Smart-contract surface
 
-### VisitProofSBT.sol  (ERC-5192)
+### VisitProofSBT.sol (ERC-5192)
+
 ```
 struct VisitData { uint256 businessId; uint64 visitedAt; }
 mapping(uint256 tokenId => VisitData) public visits
@@ -168,6 +169,7 @@ invariants:
 ```
 
 ### ReviewRegistry.sol
+
 ```
 VisitProofSBT public sbt
 uint256 public constant RECENCY_WINDOW = 60 days
@@ -206,7 +208,7 @@ ADMIN                             EMBEDDED
 ## 9. Role flows
 
 - **Business** — sign up → admin approves → receive minter wallet (key held by API)
-  + POS QR → add staff → watch dashboard → embed badge.
+  - POS QR → add staff → watch dashboard → embed badge.
 - **Staff** — log into `/scan` → after bill paid, scan customer wallet QR →
   tap "Mint VisitProof" (~3s) → customer sees the SBT.
 - **Customer** — connect wallet → show QR → receive SBT → within 60 days write a
@@ -218,13 +220,13 @@ ADMIN                             EMBEDDED
 
 ## 10. Failure modes & defenses
 
-| Attack | Defense |
-|---|---|
-| Business self-reviews via SBTs minted to its own wallets | Per-staff mint rate limit; flag high self-mint ratios; admin revokes status. Chain makes the cheating *auditable*; the platform enforces honesty. |
-| Competitor 1-star bombing | Cost of attack = one real paid visit per review; cluster analysis on wallets that 1-star many competitors. |
-| Wallet handoff (sell the seed) | Soulbound blocks SBT transfer; selling the whole wallet is economically irrational for a penny of review influence. |
-| Indexer down → reviews don't appear | Reviews exist on-chain regardless; UI shows "syncing"; on-chain count is always correct. |
-| Minter wallet compromise | Per-business rate limit + mint-rate anomaly detection; rotate the minter. Old SBTs stay valid for 60 days by design. |
+| Attack                                                   | Defense                                                                                                                                           |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Business self-reviews via SBTs minted to its own wallets | Per-staff mint rate limit; flag high self-mint ratios; admin revokes status. Chain makes the cheating _auditable_; the platform enforces honesty. |
+| Competitor 1-star bombing                                | Cost of attack = one real paid visit per review; cluster analysis on wallets that 1-star many competitors.                                        |
+| Wallet handoff (sell the seed)                           | Soulbound blocks SBT transfer; selling the whole wallet is economically irrational for a penny of review influence.                               |
+| Indexer down → reviews don't appear                      | Reviews exist on-chain regardless; UI shows "syncing"; on-chain count is always correct.                                                          |
+| Minter wallet compromise                                 | Per-business rate limit + mint-rate anomaly detection; rotate the minter. Old SBTs stay valid for 60 days by design.                              |
 
 ---
 
@@ -243,15 +245,21 @@ Contracts  ──▶ Arbitrum Sepolia
 
 ### Environment variable matrix
 
-| Var | api | web | contracts | Purpose |
-|---|:--:|:--:|:--:|---|
-| `RPC_URL` | ✓ | ✓ | ✓ | Arbitrum Sepolia RPC endpoint |
-| `SBT_ADDR` | ✓ | ✓ | | Deployed VisitProofSBT address |
-| `REGISTRY_ADDR` | ✓ | ✓ | | Deployed ReviewRegistry address |
-| `MONGO_URI` | ✓ | | | MongoDB Atlas connection string |
-| `JWT_SECRET` | ✓ | | | Sign staff/admin JWTs |
-| `BACKEND_PRIVATE_KEY` | ✓ | | ✓ | Deployer + minter wallet key (never logged) |
-| `BADGE_HMAC_KEY` | ✓ | | | Sign badge counts for anti-spoof |
+| Var                   | api | web | contracts | Purpose                                        |
+| --------------------- | :-: | :-: | :-------: | ---------------------------------------------- |
+| `RPC_URL`             |  ✓  |  ✓  |     ✓     | Arbitrum Sepolia RPC endpoint                  |
+| `INDEXER_RPC_URL`     |  ✓  |     |           | Dedicated RPC for the event indexer (see note) |
+| `SBT_ADDR`            |  ✓  |  ✓  |           | Deployed VisitProofSBT address                 |
+| `REGISTRY_ADDR`       |  ✓  |  ✓  |           | Deployed ReviewRegistry address                |
+| `MONGO_URI`           |  ✓  |     |           | MongoDB Atlas connection string                |
+| `JWT_SECRET`          |  ✓  |     |           | Sign staff/admin JWTs                          |
+| `BACKEND_PRIVATE_KEY` |  ✓  |     |     ✓     | Deployer + minter wallet key (never logged)    |
+| `BADGE_HMAC_KEY`      |  ✓  |     |           | Sign badge counts for anti-spoof               |
 
 > Secrets policy: `BACKEND_PRIVATE_KEY`, `JWT_SECRET`, and `BADGE_HMAC_KEY` are
 > validated at boot and redacted from all logs. They never reach the browser.
+
+> Indexer RPC: the `ReviewSubmitted` event indexer (PR #9) must use a dedicated
+> provider RPC (`INDEXER_RPC_URL`, e.g. Alchemy/Infura), not the public Arbitrum
+> RPC — public endpoints rate-limit and silently drop event-log queries, which
+> would leave reviews un-ingested. Falls back to `RPC_URL` if unset for dev.
