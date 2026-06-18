@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  businessIdSchema,
   businessSignupSchema,
   bytes32Schema,
   evmAddressSchema,
@@ -43,6 +44,24 @@ describe('bytes32Schema', () => {
 
   it('rejects a 31-byte hash (off-by-one)', () => {
     expect(bytes32Schema.safeParse('0x' + 'a'.repeat(62)).success).toBe(false);
+  });
+});
+
+describe('businessIdSchema', () => {
+  it('accepts a normal positive id', () => {
+    expect(businessIdSchema.safeParse(42).success).toBe(true);
+  });
+
+  it('accepts the safe-integer ceiling', () => {
+    expect(businessIdSchema.safeParse(Number.MAX_SAFE_INTEGER).success).toBe(true);
+  });
+
+  it('rejects a value past the safe-integer ceiling (would lose uint256 precision)', () => {
+    expect(businessIdSchema.safeParse(Number.MAX_SAFE_INTEGER + 1).success).toBe(false);
+  });
+
+  it.each([0, -1, 1.5])('rejects %s', (value) => {
+    expect(businessIdSchema.safeParse(value).success).toBe(false);
   });
 });
 
