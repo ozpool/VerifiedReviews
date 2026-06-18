@@ -1,0 +1,22 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+
+# pnpm
+.pnpm-store/
+
+# hardhat
+packages/contracts/artifacts/
+packages/contracts/cache/
+packages/contracts/typechain-types/
+
+# next
+packages/web/.next/
+packages/web/out/
+
+# misc
+.DS_Store
+coverage/
