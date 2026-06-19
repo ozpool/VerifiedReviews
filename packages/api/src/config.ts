@@ -12,6 +12,19 @@ const configSchema = z.object({
   // Master mnemonic for deriving per-business minter wallets. Required to
   // approve businesses and to mint (PR #8); optional so other flows can boot.
   MINTER_MNEMONIC: z.string().optional(),
+  // JSON-RPC endpoint for chain writes (Arbitrum Sepolia). Required to mint;
+  // optional so non-minting flows (auth, onboarding) can boot without it.
+  RPC_URL: z.string().url().optional(),
+  // Deployed VisitProofSBT address the minter writes to. Optional for the same
+  // reason; the mint path throws clearly if it (or RPC_URL) is missing.
+  SBT_ADDRESS: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/, 'SBT_ADDRESS must be a 0x-prefixed address')
+    .optional(),
+  // Per-business mint rate limit: at most MINT_RATE_MAX mints per business
+  // within MINT_RATE_WINDOW_SEC. Defaults are sane; tests lower them.
+  MINT_RATE_MAX: z.coerce.number().int().positive().default(30),
+  MINT_RATE_WINDOW_SEC: z.coerce.number().int().positive().default(60),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
