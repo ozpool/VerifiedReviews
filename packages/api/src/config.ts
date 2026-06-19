@@ -25,6 +25,16 @@ const configSchema = z.object({
   // within MINT_RATE_WINDOW_SEC. Defaults are sane; tests lower them.
   MINT_RATE_MAX: z.coerce.number().int().positive().default(30),
   MINT_RATE_WINDOW_SEC: z.coerce.number().int().positive().default(60),
+  // Deployed ReviewRegistry address the indexer reads ReviewSubmitted from.
+  REGISTRY_ADDRESS: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/, 'REGISTRY_ADDRESS must be a 0x-prefixed address')
+    .optional(),
+  // Dedicated indexer RPC (e.g. Alchemy) — public RPCs throttle eth_getLogs.
+  // Falls back to RPC_URL when unset.
+  INDEXER_RPC_URL: z.string().url().optional(),
+  // Secret for HMAC-signing badge counts so an embed can't be doctored.
+  BADGE_HMAC_KEY: z.string().min(16, 'BADGE_HMAC_KEY must be at least 16 characters').optional(),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

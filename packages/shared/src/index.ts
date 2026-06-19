@@ -11,3 +11,4 @@ export * from './schemas/mint';
 export * from './addresses';
 export * from './env';
 export * from './abis/index';
+export * from './hash';

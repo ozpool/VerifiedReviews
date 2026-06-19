@@ -103,20 +103,25 @@ Branch: `feat/issue-8-mint-orchestrator` (depends on #5, #7)
 
 - `feat(api): add viem mint orchestrator using business minter wallet`
 - `feat(api): add /sbt/mint with staff-scope check + rate limiting`
-- `feat(api): log every mint with staff id for audit`
-- `feat(api): handle tx revert without writing mongo`
-- `test(api): cover rate limit, scope mismatch, tx-revert no-write`
+- `test(api): cover mint scope, rate limit, and tx-revert no-write`
+
+(Audit-logging and tx-revert handling landed inside the route/service commit
+rather than as separate commits — they're one cohesive service.)
 
 ### PR #9 — Index on-chain reviews, add search, and serve signed badge counts
 
 Branch: `feat/issue-9-indexer-search-badge` (depends on #5, #6)
 
-- `feat(api): add ReviewSubmitted indexer with block checkpointing`
+- `feat(shared): add canonical review content-hash helper`
+- `feat(api): add review + checkpoint models with text index`
 - `feat(api): ingest review text + verify hash matches on-chain commit`
-- `feat(api): add mongo text index + search endpoint`
-- `feat(api): recompute sentiment + badge counts on ingest`
-- `feat(api): add /badge/:bizId with HMAC-signed counts`
+- `feat(api): add ReviewSubmitted indexer with block checkpointing`
+- `feat(api): serve /badge/:bizId with HMAC-signed counts`
 - `test(api): cover hash-mismatch reject, replay idempotency, signature tamper`
+
+(The canonical content-hash moved to `@vr/shared` so web and api agree on the
+commitment. Search lives in the review model/service; badge counts are computed
+on read rather than cached on ingest — simpler and always consistent.)
 
 ---
 

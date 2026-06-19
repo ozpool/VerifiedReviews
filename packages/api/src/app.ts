@@ -4,6 +4,7 @@ import { authRouter } from './routes/auth';
 import { businessRouter } from './routes/businesses';
 import { adminRouter } from './routes/admin';
 import { sbtRouter } from './routes/sbt';
+import { reviewRouter } from './routes/reviews';
 import { errorHandler } from './middleware/error-handler';
 
 /**
@@ -19,6 +20,7 @@ export function buildApp(): Express {
   app.use(businessRouter);
   app.use(adminRouter);
   app.use(sbtRouter);
+  app.use(reviewRouter);
 
   // Error handler is mounted last so it catches everything above it.
   app.use(errorHandler);
