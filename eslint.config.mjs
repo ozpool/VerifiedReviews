@@ -17,5 +17,13 @@ export default tseslint.config(
   {
     files: ['**/*.{ts,tsx,mts,cts}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    rules: {
+      // Allow intentionally-unused identifiers when prefixed with `_`
+      // (e.g. Express's required-but-unused error-handler `next` param).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+    },
   },
 );

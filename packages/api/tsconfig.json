@@ -2,7 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    // App, not a library — never emits .d.ts, so skip declaration generation
+    // (also avoids TS2742 on inferred Express types under pnpm's node layout).
+    "declaration": false
   },
   "include": ["src/**/*.ts"]
 }

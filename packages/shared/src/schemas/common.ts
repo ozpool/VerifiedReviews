@@ -13,8 +13,14 @@ export const bytes32Schema = z
 /** Star rating constrained to the integer range the UI and contract accept. */
 export const starRatingSchema = z.number().int().min(1).max(5);
 
-/** On-chain business identifier. Kept within safe-integer range for the API. */
-export const businessIdSchema = z.number().int().positive();
+/**
+ * On-chain business identifier. The contract type is `uint256`, but business
+ * IDs are platform-assigned and sequential, so they always fit in a JS safe
+ * integer — making the number<->uint256 conversion lossless. The explicit
+ * `.max` guarantees that: any value past 2^53-1 is rejected loudly rather than
+ * silently losing precision when handed to a uint256 argument.
+ */
+export const businessIdSchema = z.number().int().positive().max(Number.MAX_SAFE_INTEGER);
 
 export type EvmAddress = z.infer<typeof evmAddressSchema>;
 export type Bytes32 = z.infer<typeof bytes32Schema>;
