@@ -21,6 +21,12 @@ const configSchema = z.object({
     .string()
     .regex(/^0x[a-fA-F0-9]{40}$/, 'SBT_ADDRESS must be a 0x-prefixed address')
     .optional(),
+  // SBT admin private key. Signs setBusinessMinter at approval to authorize a
+  // business's derived minter on-chain. Optional so non-approving flows boot.
+  ADMIN_PRIVATE_KEY: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{64}$/, 'ADMIN_PRIVATE_KEY must be a 0x-prefixed 32-byte key')
+    .optional(),
   // Per-business mint rate limit: at most MINT_RATE_MAX mints per business
   // within MINT_RATE_WINDOW_SEC. Defaults are sane; tests lower them.
   MINT_RATE_MAX: z.coerce.number().int().positive().default(30),

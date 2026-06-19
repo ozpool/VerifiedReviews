@@ -13,7 +13,12 @@ const { buildApp } = await import('../src/app');
 const { connectDb, disconnectDb } = await import('../src/db');
 const { signToken } = await import('../src/auth/jwt');
 const { setMintOrchestrator } = await import('../src/chain/orchestrator');
+const { setMinterRegistrar } = await import('../src/chain/registrar');
 const { MintModel } = await import('../src/models/mint.model');
+
+// Approval registers a minter on-chain; stub it so these mint tests can set up
+// approved businesses without a real admin tx.
+setMinterRegistrar({ async register() {} });
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const app = buildApp();
@@ -59,6 +64,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   setMintOrchestrator(null);
+  setMinterRegistrar(null);
   await disconnectDb();
   await mongo.stop();
 });

@@ -11,6 +11,17 @@ process.env.MINTER_MNEMONIC = 'test test test test test test test test test test
 const { buildApp } = await import('../src/app');
 const { connectDb, disconnectDb } = await import('../src/db');
 const { signToken } = await import('../src/auth/jwt');
+const { setMinterRegistrar } = await import('../src/chain/registrar');
+
+// Record on-chain minter registrations instead of sending a real admin tx.
+const registered: Array<{ businessId: number; minterAddr: string }> = [];
+let registrarFails = false;
+setMinterRegistrar({
+  async register(businessId, minterAddr) {
+    if (registrarFails) throw new Error('setBusinessMinter reverted');
+    registered.push({ businessId, minterAddr });
+  },
+});
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const app = buildApp();
@@ -36,6 +47,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  setMinterRegistrar(null);
   await disconnectDb();
   await mongo.stop();
 });
@@ -76,6 +88,8 @@ describe('business signup + approval', () => {
     expect(res.body.status).toBe('approved');
     expect(res.body.businessId).toBe(1);
     expect(res.body.minterAddress).toMatch(/^0x[a-fA-F0-9]{40}$/);
+    // The minter must have been authorized on-chain for this exact business.
+    expect(registered).toContainEqual({ businessId: 1, minterAddr: res.body.minterAddress });
   });
 
   it('rejects re-approving an already-approved business', async () => {
@@ -150,5 +164,27 @@ describe('owner login + staff management', () => {
 
   it('lets the owner deactivate their staff', async () => {
     await request(app).delete(`/businesses/2/staff/${staffId}`).set(auth(ownerBToken)).expect(204);
+  });
+});
+
+describe('approval requires on-chain minter registration', () => {
+  it('does not approve when the on-chain registration fails', async () => {
+    const created = await request(app)
+      .post('/businesses')
+      .send(signupBody({ slug: 'taco-stand', ownerEmail: 'owner@taco.test' }))
+      .expect(201);
+
+    registrarFails = true;
+    await request(app)
+      .post(`/admin/businesses/${created.body.id}/approve`)
+      .set(auth(adminToken))
+      .expect(502);
+    registrarFails = false;
+
+    // Still pending — the owner cannot log in until a real approval lands.
+    await request(app)
+      .post('/auth/business/login')
+      .send({ email: 'owner@taco.test', password: 'super-secret' })
+      .expect(401);
   });
 });

@@ -4,7 +4,8 @@ import { StaffModel, type StaffDoc } from '../models/staff.model';
 import { nextSequence } from '../models/counter.model';
 import { hashPassword } from '../auth/password';
 import { deriveMinterAddress } from '../chain/minter';
-import { conflict, notFound } from '../errors';
+import { getMinterRegistrar, type MinterRegistrar } from '../chain/registrar';
+import { badGateway, conflict, notFound } from '../errors';
 
 interface SignupInput {
   slug: string;
@@ -43,18 +44,29 @@ export function listBusinesses(status?: BusinessStatus) {
     .lean();
 }
 
-/** Approve a pending business: assign a sequential id and provision its minter. */
-export async function approveBusiness(id: string): Promise<HydratedDocument<BusinessDoc>> {
+/**
+ * Approve a pending business: assign a sequential id, then authorize its derived
+ * minter on-chain BEFORE marking it approved. If the on-chain registration fails
+ * the approval fails too — otherwise we'd hand out an "approved" business whose
+ * staff can never mint (the contract would revert with NotBusinessMinter).
+ */
+export async function approveBusiness(
+  id: string,
+  registrar: MinterRegistrar = getMinterRegistrar(),
+): Promise<HydratedDocument<BusinessDoc>> {
   const business = await BusinessModel.findById(id);
   if (!business) throw notFound('Business not found');
   if (business.status !== 'pending') throw conflict('Business is not pending approval');
 
   const businessId = await nextSequence('businessId');
-  business.set({
-    status: 'approved',
-    businessId,
-    minterAddress: deriveMinterAddress(businessId),
-  });
+  const minterAddress = deriveMinterAddress(businessId);
+  try {
+    await registrar.register(businessId, minterAddress);
+  } catch (err) {
+    throw badGateway(err instanceof Error ? err.message : 'on-chain minter registration failed');
+  }
+
+  business.set({ status: 'approved', businessId, minterAddress });
   return business.save();
 }
 
