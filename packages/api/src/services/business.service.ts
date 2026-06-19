@@ -7,6 +7,15 @@ import { deriveMinterAddress } from '../chain/minter';
 import { getMinterRegistrar, type MinterRegistrar } from '../chain/registrar';
 import { badGateway, conflict, notFound } from '../errors';
 
+const PUBLIC_FIELDS = 'slug name category city description websiteUrl businessId' as const;
+const PUBLIC_BROWSE_LIMIT = 100;
+
+export interface PublicBusinessFilters {
+  q?: string;
+  city?: string;
+  category?: string;
+}
+
 interface SignupInput {
   slug: string;
   name: string;
@@ -35,6 +44,36 @@ export async function createBusiness(input: SignupInput): Promise<HydratedDocume
     if (isDuplicateKey(err)) throw conflict('slug or owner email already in use');
     throw err;
   }
+}
+
+/** Public: list approved businesses with optional filters. Never returns private fields. */
+export function listPublicBusinesses(filters: PublicBusinessFilters = {}) {
+  const query: Record<string, unknown> = { status: 'approved' };
+
+  if (filters.q) {
+    query.name = { $regex: filters.q, $options: 'i' };
+  }
+  if (filters.city) {
+    query.city = { $regex: `^${filters.city}$`, $options: 'i' };
+  }
+  if (filters.category) {
+    query.category = { $regex: `^${filters.category}$`, $options: 'i' };
+  }
+
+  return BusinessModel.find(query)
+    .select(PUBLIC_FIELDS)
+    .sort({ name: 1 })
+    .limit(PUBLIC_BROWSE_LIMIT)
+    .lean();
+}
+
+/** Public: get one approved business by slug. Never returns private fields. */
+export async function getPublicBusinessBySlug(slug: string) {
+  const business = await BusinessModel.findOne({ slug: slug.toLowerCase(), status: 'approved' })
+    .select(PUBLIC_FIELDS)
+    .lean();
+  if (!business) throw notFound('Business not found');
+  return business;
 }
 
 /** List businesses, optionally filtered by status. */
