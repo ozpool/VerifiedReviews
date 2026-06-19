@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose, { type Model } from 'mongoose';
+const { Schema, model, models } = mongoose;
 
 /** The last block the indexer has processed for a given contract, so a restart
  * resumes instead of re-scanning (or worse, missing) history. */
