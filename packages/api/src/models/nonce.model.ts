@@ -1,4 +1,5 @@
-import { Schema, model } from 'mongoose';
+import mongoose from 'mongoose';
+const { Schema, model } = mongoose;
 
 /** Single-use SIWE login nonces. The TTL index expires them after 5 minutes. */
 const nonceSchema = new Schema({

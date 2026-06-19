@@ -1,4 +1,5 @@
-import { Schema, model, models, Types, type Model } from 'mongoose';
+import mongoose, { type Model, type Types } from 'mongoose';
+const { Schema, model, models } = mongoose;
 
 export interface StaffDoc {
   business: Types.ObjectId;

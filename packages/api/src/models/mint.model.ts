@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose, { type Model } from 'mongoose';
+const { Schema, model, models } = mongoose;
 
 /**
  * Audit record of one minted VisitProof. Written only after the on-chain tx
