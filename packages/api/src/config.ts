@@ -35,6 +35,8 @@ const configSchema = z.object({
   INDEXER_RPC_URL: z.string().url().optional(),
   // Secret for HMAC-signing badge counts so an embed can't be doctored.
   BADGE_HMAC_KEY: z.string().min(16, 'BADGE_HMAC_KEY must be at least 16 characters').optional(),
+  // How often the review indexer polls the chain for new ReviewSubmitted events.
+  INDEXER_POLL_MS: z.coerce.number().int().positive().default(15000),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
