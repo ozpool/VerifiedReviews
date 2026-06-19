@@ -7,3 +7,4 @@ cache
 typechain-types
 coverage
 pnpm-lock.yaml
+packages/shared/src/abis
