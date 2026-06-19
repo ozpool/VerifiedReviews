@@ -88,11 +88,14 @@ Branch: `feat/issue-6-api-foundation`
 
 Branch: `feat/issue-7-auth-accounts` (depends on #6)
 
-- `feat(api): add SIWE nonce + verify for customer sessions`
-- `feat(api): add staff JWT scoped to businessId + admin JWT + role middleware`
-- `feat(api): add business signup + KYB draft + admin approval + minter provisioning`
-- `feat(api): add staff create/remove scoped to business`
-- `test(api): cover auth tamper/expiry + approval state machine + unauthorized access`
+- `feat(api): add JWT issuance and password hashing helpers`
+- `feat(api): add SIWE nonce/verify and admin login`
+- `feat(api): add bearer auth and role middleware`
+- `test(api): cover SIWE, JWT, and role middleware`
+- `fix(api): bind SIWE domain and chainId on verify`
+- `feat(api): add business signup, approval, and minter provisioning`
+- `feat(api): add owner/staff login and scoped staff routes`
+- `test(api): cover approval flow and cross-business access`
 
 ### PR #8 — Mint VisitProofs from the API with rate limiting and audit trail
 
