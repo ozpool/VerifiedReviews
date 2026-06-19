@@ -17,3 +17,5 @@ export const unauthorized = (message = 'Unauthorized') => new AppError(401, mess
 export const forbidden = (message = 'Forbidden') => new AppError(403, message);
 export const notFound = (message = 'Not found') => new AppError(404, message);
 export const conflict = (message: string) => new AppError(409, message);
+export const tooManyRequests = (message = 'Too many requests') => new AppError(429, message);
+export const badGateway = (message = 'Upstream failure') => new AppError(502, message);

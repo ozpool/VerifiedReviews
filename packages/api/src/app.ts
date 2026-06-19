@@ -3,6 +3,7 @@ import { healthRouter } from './routes/health';
 import { authRouter } from './routes/auth';
 import { businessRouter } from './routes/businesses';
 import { adminRouter } from './routes/admin';
+import { sbtRouter } from './routes/sbt';
 import { errorHandler } from './middleware/error-handler';
 
 /**
@@ -17,6 +18,7 @@ export function buildApp(): Express {
   app.use(authRouter);
   app.use(businessRouter);
   app.use(adminRouter);
+  app.use(sbtRouter);
 
   // Error handler is mounted last so it catches everything above it.
   app.use(errorHandler);
