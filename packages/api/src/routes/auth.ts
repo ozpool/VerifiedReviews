@@ -112,11 +112,12 @@ authRouter.post('/auth/staff/login', validateBody(loginSchema), async (req, res,
     if (!staff || !(await verifyPassword(password, staff.passwordHash))) {
       throw unauthorized('Invalid credentials');
     }
+    const business = await BusinessModel.findOne({ businessId: staff.businessId }, 'slug').lean();
     const token = signToken(
       { sub: staff.id, role: 'staff', businessId: staff.businessId },
       loadConfig().JWT_SECRET,
     );
-    res.json({ token, businessId: staff.businessId });
+    res.json({ token, businessId: staff.businessId, slug: business?.slug ?? '' });
   } catch (err) {
     next(err);
   }

@@ -159,6 +159,7 @@ export function ingestReview(
 export interface StaffSession {
   token: string;
   businessId: number;
+  slug: string;
 }
 
 /** POST /auth/staff/login — exchange credentials for a business-scoped JWT. */
