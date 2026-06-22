@@ -9,9 +9,8 @@
 
 const API_BASE =
   (typeof window === 'undefined'
-    ? process.env['NEXT_PUBLIC_API_URL']   // SSR / build time
-    : window.__NEXT_DATA__?.props?.apiUrl  // never used — just TS-safe
-  ) ??
+    ? process.env['NEXT_PUBLIC_API_URL'] // SSR / build time
+    : window.__NEXT_DATA__?.props?.apiUrl) ?? // never used — just TS-safe
   process.env['NEXT_PUBLIC_API_URL'] ??
   'http://localhost:4000';
 
@@ -31,10 +30,7 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   token?: string;
 };
 
-export async function apiFetch<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<T> {
+export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, token, ...rest } = options;
 
   const headers: HeadersInit = {
@@ -65,7 +61,7 @@ export async function apiFetch<T>(
   return res.json() as Promise<T>;
 }
 
-// ---- Typed endpoints (grow this as pages are added in PR #11–#13) ----
+// ---- Typed endpoints ----
 
 export interface HealthResponse {
   status: 'ok';
@@ -74,4 +70,67 @@ export interface HealthResponse {
 
 export function fetchHealth(): Promise<HealthResponse> {
   return apiFetch<HealthResponse>('/health');
+}
+
+/** A public business profile (only non-private fields the API exposes). */
+export interface PublicBusiness {
+  slug: string;
+  name: string;
+  category: string;
+  city: string;
+  description?: string;
+  websiteUrl?: string;
+  businessId: number;
+}
+
+/** A confirmed (on-chain-verified) review as the search endpoint returns it. */
+export interface Review {
+  businessId: number;
+  reviewer: string;
+  rating: number;
+  text: string;
+  sentiment: 'positive' | 'neutral' | 'negative';
+  txHash: string;
+  createdAt: string;
+}
+
+/** HMAC-signed aggregate counts the badge endpoint serves. */
+export interface Badge {
+  businessId: number;
+  count: number;
+  avgRating: number;
+  signature: string;
+}
+
+export interface BrowseFilters {
+  q?: string;
+  city?: string;
+  category?: string;
+}
+
+/** GET /businesses — approved businesses, optionally filtered. */
+export function fetchBusinesses(filters: BrowseFilters = {}): Promise<PublicBusiness[]> {
+  const qs = new URLSearchParams();
+  if (filters.q) qs.set('q', filters.q);
+  if (filters.city) qs.set('city', filters.city);
+  if (filters.category) qs.set('category', filters.category);
+  const suffix = qs.toString() ? `?${qs}` : '';
+  return apiFetch<PublicBusiness[]>(`/businesses${suffix}`);
+}
+
+/** GET /businesses/:slug — one approved business. */
+export function fetchBusiness(slug: string): Promise<PublicBusiness> {
+  return apiFetch<PublicBusiness>(`/businesses/${encodeURIComponent(slug)}`);
+}
+
+/** GET /reviews/search — a business's confirmed reviews, optional full-text q. */
+export function fetchReviews(businessId: number, q?: string): Promise<Review[]> {
+  const qs = new URLSearchParams({ businessId: String(businessId) });
+  if (q) qs.set('q', q);
+  return apiFetch<Review[]>(`/reviews/search?${qs}`);
+}
+
+/** GET /badge/:bizId — signed verified count + average rating. */
+export function fetchBadge(businessId: number): Promise<Badge> {
+  return apiFetch<Badge>(`/badge/${businessId}`);
 }
