@@ -109,6 +109,14 @@ export async function approveBusiness(
   return business.save();
 }
 
+/** Active staff for a business, for the owner's staff-management view. */
+export function listStaff(businessId: number) {
+  return StaffModel.find({ businessId, active: true })
+    .select('email')
+    .sort({ createdAt: 1 })
+    .lean();
+}
+
 /** Add a staff member to an approved business. */
 export async function addStaff(
   businessId: number,
@@ -131,9 +139,6 @@ export async function addStaff(
 
 /** Deactivate a staff member belonging to the given business. */
 export async function removeStaff(businessId: number, staffId: string): Promise<void> {
-  const result = await StaffModel.findOneAndUpdate(
-    { _id: staffId, businessId },
-    { active: false },
-  );
+  const result = await StaffModel.findOneAndUpdate({ _id: staffId, businessId }, { active: false });
   if (!result) throw notFound('Staff not found for this business');
 }

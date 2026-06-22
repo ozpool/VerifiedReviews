@@ -198,3 +198,93 @@ export interface MintRow {
 export function fetchMints(token: string): Promise<MintRow[]> {
   return apiFetch<MintRow[]>('/sbt/mints', { token });
 }
+
+// ---- Owner + admin endpoints (JWT-authenticated) ----
+
+export interface OwnerSession {
+  token: string;
+  businessId: number;
+}
+
+/** POST /auth/business/login — owner login (only approved businesses). */
+export function loginOwner(email: string, password: string): Promise<OwnerSession> {
+  return apiFetch<OwnerSession>('/auth/business/login', {
+    method: 'POST',
+    body: { email, password },
+  });
+}
+
+export interface RegisterBusinessPayload {
+  name: string;
+  slug: string;
+  category: string;
+  city: string;
+  description?: string;
+  websiteUrl?: string;
+  ownerEmail: string;
+  ownerPassword: string;
+}
+
+/** POST /businesses — submit a new business application (lands in pending). */
+export function registerBusiness(
+  payload: RegisterBusinessPayload,
+): Promise<{ id: string; slug: string; status: string }> {
+  return apiFetch('/businesses', { method: 'POST', body: payload });
+}
+
+export interface AdminSession {
+  token: string;
+}
+
+/** POST /auth/admin/login. */
+export function loginAdmin(email: string, password: string): Promise<AdminSession> {
+  return apiFetch<AdminSession>('/auth/admin/login', { method: 'POST', body: { email, password } });
+}
+
+export interface StaffMember {
+  _id: string;
+  email: string;
+}
+
+/** GET /businesses/:id/staff — owner's active staff. */
+export function fetchStaff(token: string, businessId: number): Promise<StaffMember[]> {
+  return apiFetch<StaffMember[]>(`/businesses/${businessId}/staff`, { token });
+}
+
+/** POST /businesses/:id/staff — add a staff member. */
+export function addStaff(token: string, businessId: number, email: string, password: string) {
+  return apiFetch<{ id: string; email: string }>(`/businesses/${businessId}/staff`, {
+    method: 'POST',
+    token,
+    body: { email, password },
+  });
+}
+
+/** DELETE /businesses/:id/staff/:staffId — deactivate a staff member. */
+export function removeStaff(token: string, businessId: number, staffId: string): Promise<void> {
+  return apiFetch(`/businesses/${businessId}/staff/${staffId}`, { method: 'DELETE', token });
+}
+
+export interface AdminBusiness {
+  _id: string;
+  slug: string;
+  name: string;
+  city: string;
+  status: 'pending' | 'approved' | 'rejected';
+  businessId?: number;
+}
+
+/** GET /admin/businesses?status= — admin business list. */
+export function adminListBusinesses(token: string, status?: string): Promise<AdminBusiness[]> {
+  return apiFetch<AdminBusiness[]>(`/admin/businesses${status ? `?status=${status}` : ''}`, {
+    token,
+  });
+}
+
+/** POST /admin/businesses/:id/approve. */
+export function adminApprove(token: string, id: string) {
+  return apiFetch<{ status: string; businessId: number }>(`/admin/businesses/${id}/approve`, {
+    method: 'POST',
+    token,
+  });
+}

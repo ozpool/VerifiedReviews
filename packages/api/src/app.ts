@@ -1,4 +1,5 @@
 import express, { type Express } from 'express';
+import cors from 'cors';
 import { healthRouter } from './routes/health';
 import { authRouter } from './routes/auth';
 import { businessRouter } from './routes/businesses';
@@ -7,12 +8,13 @@ import { sbtRouter } from './routes/sbt';
 import { reviewRouter } from './routes/reviews';
 import { errorHandler } from './middleware/error-handler';
 
-/**
- * Build the Express app. Returned without listening so tests can drive it with
- * supertest. Domain routes are mounted here as later PRs add them.
- */
 export function buildApp(): Express {
   const app = express();
+
+  const allowedOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:3000';
+  app.use(cors({ origin: allowedOrigin, credentials: true }));
+  app.options('*', cors({ origin: allowedOrigin, credentials: true }));
+
   app.use(express.json());
 
   app.use(healthRouter);
