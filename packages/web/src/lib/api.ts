@@ -153,3 +153,48 @@ export function ingestReview(
 ): Promise<{ contentHash: string; confirmed: boolean }> {
   return apiFetch('/reviews', { method: 'POST', body: payload });
 }
+
+// ---- Staff endpoints (JWT-authenticated) ----
+
+export interface StaffSession {
+  token: string;
+  businessId: number;
+}
+
+/** POST /auth/staff/login — exchange credentials for a business-scoped JWT. */
+export function loginStaff(email: string, password: string): Promise<StaffSession> {
+  return apiFetch<StaffSession>('/auth/staff/login', {
+    method: 'POST',
+    body: { email, password },
+  });
+}
+
+export interface MintResult {
+  tokenId: string;
+  txHash: string;
+}
+
+/** POST /sbt/mint — mint a VisitProof to a customer wallet (staff/owner only). */
+export function mintVisitProof(
+  token: string,
+  businessId: number,
+  customerAddr: string,
+): Promise<MintResult> {
+  return apiFetch<MintResult>('/sbt/mint', {
+    method: 'POST',
+    token,
+    body: { businessId, customerAddr },
+  });
+}
+
+export interface MintRow {
+  customerAddr: string;
+  tokenId: string;
+  txHash: string;
+  createdAt: string;
+}
+
+/** GET /sbt/mints — the staff's own business mint log (default last 24h). */
+export function fetchMints(token: string): Promise<MintRow[]> {
+  return apiFetch<MintRow[]>('/sbt/mints', { token });
+}
