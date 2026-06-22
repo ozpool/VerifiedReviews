@@ -18,7 +18,7 @@
  */
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { arbitrumSepolia } from 'wagmi/chains';
