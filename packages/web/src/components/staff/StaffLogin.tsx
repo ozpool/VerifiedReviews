@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { loginStaff, ApiError, type StaffSession } from '@/lib/api';
+import { loginStaff, loginErrorMessage, type StaffSession } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 
 const input =
@@ -22,11 +22,7 @@ export function StaffLogin({ onLogin }: { onLogin: (s: StaffSession) => void }) 
     try {
       onLogin(await loginStaff(email, password));
     } catch (err) {
-      setError(
-        err instanceof ApiError && err.status === 401
-          ? 'Wrong email or password.'
-          : 'Login failed. Please try again.',
-      );
+      setError(loginErrorMessage(err));
     } finally {
       setBusy(false);
     }
