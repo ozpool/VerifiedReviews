@@ -134,3 +134,22 @@ export function fetchReviews(businessId: number, q?: string): Promise<Review[]> 
 export function fetchBadge(businessId: number): Promise<Badge> {
   return apiFetch<Badge>(`/badge/${businessId}`);
 }
+
+/** The review text + on-chain commitment the API ingests after a submit tx. */
+export interface ReviewIngestPayload {
+  businessId: number;
+  reviewer: string;
+  rating: number;
+  text: string;
+  nonce: string;
+  contentHash: string;
+  txHash: string;
+}
+
+/** POST /reviews — store the text once its tx is on-chain. The API rejects it
+ * unless the text hashes to the committed contentHash. */
+export function ingestReview(
+  payload: ReviewIngestPayload,
+): Promise<{ contentHash: string; confirmed: boolean }> {
+  return apiFetch('/reviews', { method: 'POST', body: payload });
+}
