@@ -48,7 +48,14 @@ function fakeOrchestrator(opts: { revert?: boolean } = {}) {
 async function approvedBusiness(slug: string, ownerEmail: string): Promise<number> {
   const created = await request(app)
     .post('/businesses')
-    .send({ slug, name: slug, category: 'Restaurant', city: 'Austin', ownerEmail, ownerPassword: 'super-secret' })
+    .send({
+      slug,
+      name: slug,
+      category: 'Restaurant',
+      city: 'Austin',
+      ownerEmail,
+      ownerPassword: 'super-secret',
+    })
     .expect(201);
   const res = await request(app)
     .post(`/admin/businesses/${created.body.id}/approve`)
@@ -102,7 +109,10 @@ describe('POST /sbt/mint', () => {
 
   it('rejects unauthenticated and customer-role callers', async () => {
     const customer = signToken({ sub: CUSTOMER, role: 'customer' }, JWT_SECRET);
-    await request(app).post('/sbt/mint').send({ businessId: 1, customerAddr: CUSTOMER }).expect(401);
+    await request(app)
+      .post('/sbt/mint')
+      .send({ businessId: 1, customerAddr: CUSTOMER })
+      .expect(401);
     await request(app)
       .post('/sbt/mint')
       .set(auth(customer))
@@ -133,5 +143,37 @@ describe('POST /sbt/mint', () => {
     await request(app).post('/sbt/mint').set(auth(staff)).send(body).expect(201);
     await request(app).post('/sbt/mint').set(auth(staff)).send(body).expect(201);
     await request(app).post('/sbt/mint').set(auth(staff)).send(body).expect(429);
+  });
+});
+
+describe('GET /sbt/mints', () => {
+  it("returns the staff's own business mints, newest first", async () => {
+    const bizId = await approvedBusiness('cafe-log', 'log@cafe.test');
+    const staff = signToken({ sub: 'staff-log', role: 'staff', businessId: bizId }, JWT_SECRET);
+    setMintOrchestrator(fakeOrchestrator());
+    await request(app)
+      .post('/sbt/mint')
+      .set(auth(staff))
+      .send({ businessId: bizId, customerAddr: CUSTOMER })
+      .expect(201);
+
+    const res = await request(app).get('/sbt/mints').set(auth(staff)).expect(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].customerAddr).toBe(CUSTOMER);
+    expect(res.body[0].txHash).toMatch(/^0x[0-9a-f]{64}$/);
+  });
+
+  it("never leaks another business's mints", async () => {
+    const otherId = await approvedBusiness('cafe-other', 'other@cafe.test');
+    const staff = signToken({ sub: 'staff-o', role: 'staff', businessId: otherId }, JWT_SECRET);
+    // cafe-other has minted nothing of its own, so the log is empty.
+    const res = await request(app).get('/sbt/mints').set(auth(staff)).expect(200);
+    expect(res.body).toEqual([]);
+  });
+
+  it('rejects unauthenticated and customer-role callers', async () => {
+    const customer = signToken({ sub: CUSTOMER, role: 'customer' }, JWT_SECRET);
+    await request(app).get('/sbt/mints').expect(401);
+    await request(app).get('/sbt/mints').set(auth(customer)).expect(403);
   });
 });
