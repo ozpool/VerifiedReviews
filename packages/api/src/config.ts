@@ -43,6 +43,11 @@ const configSchema = z.object({
   BADGE_HMAC_KEY: z.string().min(16, 'BADGE_HMAC_KEY must be at least 16 characters').optional(),
   // How often the review indexer polls the chain for new ReviewSubmitted events.
   INDEXER_POLL_MS: z.coerce.number().int().positive().default(15000),
+  // Privy app id + secret for verifying embedded-wallet logins. Optional so
+  // non-Privy flows boot; the verifier throws clearly if a Privy login is
+  // attempted without them. The secret is never logged or sent to the browser.
+  PRIVY_APP_ID: z.string().optional(),
+  PRIVY_APP_SECRET: z.string().optional(),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
