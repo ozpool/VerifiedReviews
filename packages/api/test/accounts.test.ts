@@ -118,7 +118,10 @@ describe('owner login + staff management', () => {
   });
 
   it('lets an owner log in once approved', async () => {
-    await request(app).post(`/admin/businesses/${bizBId}/approve`).set(auth(adminToken)).expect(200);
+    await request(app)
+      .post(`/admin/businesses/${bizBId}/approve`)
+      .set(auth(adminToken))
+      .expect(200);
     const res = await request(app)
       .post('/auth/business/login')
       .send({ email: 'owner@sushi.test', password: 'super-secret' })
@@ -140,6 +143,15 @@ describe('owner login + staff management', () => {
       .send({ email: 'chef@sushi.test', password: 'staff-secret' })
       .expect(200);
     expect(login.body.businessId).toBe(2);
+  });
+
+  it("lists the owner's own active staff", async () => {
+    const res = await request(app).get('/businesses/2/staff').set(auth(ownerBToken)).expect(200);
+    expect(res.body.map((s: { email: string }) => s.email)).toContain('chef@sushi.test');
+  });
+
+  it('forbids listing staff of a different business', async () => {
+    await request(app).get('/businesses/1/staff').set(auth(ownerBToken)).expect(403);
   });
 
   it('forbids an owner from adding staff to a different business', async () => {
