@@ -1,5 +1,6 @@
 import type { Review } from '@/lib/api';
 import { RatingStars } from './RatingStars';
+import { FlagButton } from './FlagButton';
 import { txUrl, shortHex } from '@/lib/explorer';
 
 /**
@@ -47,6 +48,10 @@ export function ReviewCard({ review }: { review: Review }) {
         <span className="font-mono text-muted">{shortHex(review.txHash, 8, 6)}</span>
         <span aria-hidden="true">↗</span>
       </a>
+
+      <div className="mt-2">
+        <FlagButton reviewId={review._id} />
+      </div>
     </article>
   );
 }

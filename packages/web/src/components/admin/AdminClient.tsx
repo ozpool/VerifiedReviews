@@ -4,6 +4,7 @@ import { useSession } from '@/lib/session';
 import { loginAdmin, type AdminSession } from '@/lib/api';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ApprovalQueue } from './ApprovalQueue';
+import { FlagQueue } from './FlagQueue';
 import { Loading } from '@/components/ui/StatusStates';
 
 /** Admin area: sign in, then moderate the pending-business queue. */
@@ -31,6 +32,9 @@ export function AdminClient() {
         </button>
       </div>
       <ApprovalQueue token={session.token} />
+
+      <h2 className="font-display text-lg font-semibold text-ink mt-4">Flagged reviews</h2>
+      <FlagQueue token={session.token} />
     </div>
   );
 }

@@ -85,6 +85,7 @@ export interface PublicBusiness {
 
 /** A confirmed (on-chain-verified) review as the search endpoint returns it. */
 export interface Review {
+  _id: string;
   businessId: number;
   reviewer: string;
   rating: number;
@@ -133,6 +134,45 @@ export function fetchReviews(businessId: number, q?: string): Promise<Review[]> 
 /** GET /badge/:bizId — signed verified count + average rating. */
 export function fetchBadge(businessId: number): Promise<Badge> {
   return apiFetch<Badge>(`/badge/${businessId}`);
+}
+
+/** POST /reviews/:id/flag — report a review for spam/abuse (public). */
+export function flagReview(
+  reviewId: string,
+  reason: string,
+): Promise<{ id: string; status: string }> {
+  return apiFetch(`/reviews/${reviewId}/flag`, { method: 'POST', body: { reason } });
+}
+
+/** An open flag plus a preview of the review it targets, for the admin queue. */
+export interface FlaggedReview {
+  _id: string;
+  reason: string;
+  status: 'open' | 'dismissed' | 'actioned';
+  createdAt: string;
+  review: {
+    _id: string;
+    businessId: number;
+    reviewer: string;
+    rating: number;
+    text: string;
+    sentiment: string;
+    hidden: boolean;
+  } | null;
+}
+
+/** GET /admin/flags — open moderation queue (admin only). */
+export function adminListFlags(token: string): Promise<FlaggedReview[]> {
+  return apiFetch<FlaggedReview[]>('/admin/flags', { token });
+}
+
+/** POST /admin/flags/:id/resolve — dismiss (false alarm) or hide the review. */
+export function adminResolveFlag(
+  token: string,
+  flagId: string,
+  action: 'dismiss' | 'hide',
+): Promise<{ id: string; status: string }> {
+  return apiFetch(`/admin/flags/${flagId}/resolve`, { method: 'POST', token, body: { action } });
 }
 
 /** The review text + on-chain commitment the API ingests after a submit tx. */
