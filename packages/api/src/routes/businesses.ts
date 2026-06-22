@@ -51,6 +51,21 @@ businessRouter.post('/businesses', validateBody(signupSchema), async (req, res, 
 
 const staffSchema = z.object({ email: z.string().email(), password: z.string().min(8) });
 
+/** Owner-only: list the active staff of the owner's own business. */
+businessRouter.get(
+  '/businesses/:businessId/staff',
+  requireAuth,
+  requireRole('owner'),
+  requireBusinessScope,
+  async (req, res, next) => {
+    try {
+      res.json(await businesses.listStaff(Number(req.params.businessId)));
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 /** Owner-only: add a staff member to the owner's own business. */
 businessRouter.post(
   '/businesses/:businessId/staff',

@@ -7,11 +7,20 @@ export interface IndexerHandle {
   stop: () => void;
 }
 
+const INITIAL_LOOKBACK = 1_000n;
+// Alchemy free tier caps eth_getLogs at 10 blocks per call. Override via
+// INDEXER_CHUNK_SIZE for paid-tier RPCs (e.g. 2000).
+const DEFAULT_CHUNK_SIZE = 10n;
+
 /** One indexer pass: read the chain head, ingest up to it. Exposed (and given
  * injectable deps) so it can be driven directly in tests without a timer. */
 export async function runIndexerTick(client: PublicClient, fetchEvents: EventFetcher) {
   const head = await client.getBlockNumber();
-  return indexOnce({ fetchEvents, toBlock: head });
+  const chunkSize = BigInt(process.env.INDEXER_CHUNK_SIZE ?? DEFAULT_CHUNK_SIZE);
+  // On first run (checkpoint == 0) start from INITIAL_LOOKBACK blocks behind
+  // the head so we don't attempt to scan 270M+ blocks from genesis.
+  const startBlock = head > INITIAL_LOOKBACK ? head - INITIAL_LOOKBACK : 0n;
+  return indexOnce({ fetchEvents, toBlock: head, startBlock, chunkSize });
 }
 
 /**
@@ -36,7 +45,8 @@ export function startReviewIndexer(): IndexerHandle | null {
   const loop = async () => {
     try {
       const { confirmed, lastBlock } = await runIndexerTick(client, fetchEvents);
-      if (confirmed > 0) console.log(`Indexer: confirmed ${confirmed} review(s) up to block ${lastBlock}`);
+      if (confirmed > 0)
+        console.log(`Indexer: confirmed ${confirmed} review(s) up to block ${lastBlock}`);
     } catch (err) {
       console.error('Indexer tick failed:', err instanceof Error ? err.message : err);
     }
