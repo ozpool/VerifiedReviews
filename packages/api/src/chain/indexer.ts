@@ -15,7 +15,8 @@ export type EventFetcher = (fromBlock: bigint, toBlock: bigint) => Promise<OnCha
 export function createLogFetcher(): EventFetcher {
   const { INDEXER_RPC_URL, RPC_URL, REGISTRY_ADDRESS } = loadConfig();
   const rpc = INDEXER_RPC_URL ?? RPC_URL;
-  if (!rpc || !REGISTRY_ADDRESS) throw new Error('INDEXER_RPC_URL/RPC_URL and REGISTRY_ADDRESS required');
+  if (!rpc || !REGISTRY_ADDRESS)
+    throw new Error('INDEXER_RPC_URL/RPC_URL and REGISTRY_ADDRESS required');
   const client: PublicClient = createPublicClient({ chain: arbitrumSepolia, transport: http(rpc) });
   const address = REGISTRY_ADDRESS as Hex;
 
@@ -44,22 +45,39 @@ export function createLogFetcher(): EventFetcher {
  * every matching review, then advance the checkpoint so the next pass resumes
  * where this one stopped. confirmEvent is idempotent, so an overlapping or
  * replayed range never double-counts.
+ *
+ * chunkSize caps how many blocks are requested per eth_getLogs call — Alchemy
+ * free tier enforces a 10-block maximum. startBlock is used only when the
+ * checkpoint is 0 (first ever run) so we don't scan from genesis.
  */
 export async function indexOnce(opts: {
   fetchEvents: EventFetcher;
   toBlock: bigint;
+  startBlock?: bigint;
+  chunkSize?: bigint;
   checkpointName?: string;
 }): Promise<{ confirmed: number; lastBlock: number }> {
   const name = opts.checkpointName ?? CHECKPOINT;
   const last = await getCheckpoint(name);
-  const fromBlock = BigInt(last + 1);
+  const chunkSize = opts.chunkSize ?? 10n;
+
+  // On first run (no checkpoint), honour startBlock to skip the pre-deploy history.
+  const fromBlock =
+    last === 0 && opts.startBlock !== undefined ? opts.startBlock : BigInt(last + 1);
+
   if (opts.toBlock < fromBlock) return { confirmed: 0, lastBlock: last };
 
-  const events = await opts.fetchEvents(fromBlock, opts.toBlock);
   let confirmed = 0;
-  for (const event of events) {
-    if (await confirmEvent(event)) confirmed += 1;
+  let cursor = fromBlock;
+  while (cursor <= opts.toBlock) {
+    const chunkTo = cursor + chunkSize - 1n < opts.toBlock ? cursor + chunkSize - 1n : opts.toBlock;
+    const events = await opts.fetchEvents(cursor, chunkTo);
+    for (const event of events) {
+      if (await confirmEvent(event)) confirmed += 1;
+    }
+    await setCheckpoint(name, Number(chunkTo));
+    cursor = chunkTo + 1n;
   }
-  await setCheckpoint(name, Number(opts.toBlock));
+
   return { confirmed, lastBlock: Number(opts.toBlock) };
 }
