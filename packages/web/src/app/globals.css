@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Map tokens to CSS vars so non-Tailwind contexts can use them */
+    --color-paper: #F9F6F1;
+    --color-ink: #1A1A18;
+    --color-accent: #D4541A;
+    --color-border: #D9D3C8;
+    --color-muted: #6B6560;
+  }
+
+  html {
+    background-color: theme('colors.paper');
+    color: theme('colors.ink');
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Thin horizontal rule used as section dividers — receipt motif */
+  .rule {
+    @apply border-t border-border;
+  }
+
+  /* Stamp border — dashed box motif for verified badges */
+  .stamp {
+    @apply border-2 border-dashed border-accent rounded-sm;
+  }
+}
+
+@layer utilities {
+  /* Text that uses the display (Fraunces) font */
+  .font-display {
+    font-family: var(--font-fraunces), Georgia, serif;
+  }
+}
