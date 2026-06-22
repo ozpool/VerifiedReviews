@@ -7,6 +7,33 @@ import * as businesses from '../services/business.service';
 
 export const businessRouter = Router();
 
+const browseQuerySchema = z.object({
+  q: z.string().optional(),
+  city: z.string().optional(),
+  category: z.string().optional(),
+});
+
+/** Public: list approved businesses with optional filters. */
+businessRouter.get('/businesses', async (req, res, next) => {
+  try {
+    const filters = browseQuerySchema.parse(req.query);
+    const results = await businesses.listPublicBusinesses(filters);
+    res.json(results);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** Public: get one approved business by slug. */
+businessRouter.get('/businesses/:slug', async (req, res, next) => {
+  try {
+    const business = await businesses.getPublicBusinessBySlug(req.params.slug!);
+    res.json(business);
+  } catch (err) {
+    next(err);
+  }
+});
+
 const signupSchema = businessSignupSchema.extend({
   ownerEmail: z.string().email(),
   ownerPassword: z.string().min(8),
