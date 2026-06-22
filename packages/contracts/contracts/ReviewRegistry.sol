@@ -14,20 +14,25 @@ import {VisitProofSBT} from "./VisitProofSBT.sol";
 ///      keyed by the content hash committed here.
 ///
 /// Spec
-/// State:  sbt (immutable), RECENCY_WINDOW (constant 60 days)
+/// State:  sbt (immutable), RECENCY_WINDOW (constant 60 days), reviewed[tokenId]
 /// External: submit(businessId, contentHash, starRating)
 /// Events: ReviewSubmitted
-/// Errors: InvalidRating, NoVisitProof, VisitTooOld
+/// Errors: InvalidRating, NoVisitProof, VisitTooOld, AlreadyReviewed
 /// Invariants:
 ///   - submit reverts unless msg.sender holds a VisitProof for businessId
 ///   - submit reverts unless that proof's visitedAt is within RECENCY_WINDOW
-///   - no state is written; the contract holds no funds and no review storage
+///   - each VisitProof (tokenId) can back at most one review — one paid visit,
+///     one review. A later visit mints a new tokenId, which can review again.
 contract ReviewRegistry {
     /// @notice The soulbound visit-receipt contract this registry gates against.
     VisitProofSBT public immutable sbt;
 
     /// @notice Maximum age of a VisitProof that still permits a review.
     uint256 public constant RECENCY_WINDOW = 60 days;
+
+    /// @notice Whether a given VisitProof has already been used to review.
+    ///         Keyed by tokenId so one visit yields at most one review.
+    mapping(uint256 tokenId => bool used) public reviewed;
 
     /// @notice Emitted on every accepted review. This is the canonical record.
     event ReviewSubmitted(
@@ -46,6 +51,9 @@ contract ReviewRegistry {
 
     /// @dev The submitter's most recent VisitProof is older than RECENCY_WINDOW.
     error VisitTooOld(uint64 visitedAt, uint256 nowTs);
+
+    /// @dev This VisitProof has already backed a review; visit again to review again.
+    error AlreadyReviewed(uint256 tokenId);
 
     constructor(VisitProofSBT sbt_) {
         sbt = sbt_;
@@ -72,8 +80,15 @@ contract ReviewRegistry {
         if (block.timestamp - visitedAt > RECENCY_WINDOW) {
             revert VisitTooOld(visitedAt, block.timestamp);
         }
+        if (reviewed[tokenId]) {
+            revert AlreadyReviewed(tokenId);
+        }
 
-        // No effects/interactions: the event log is the record.
+        // Effects: mark this VisitProof spent before emitting, so one visit can
+        // back at most one review. Checks-Effects-Interactions (the emit is the
+        // only "interaction" and writes nothing external).
+        reviewed[tokenId] = true;
+
         emit ReviewSubmitted(businessId, msg.sender, contentHash, starRating, block.timestamp);
     }
 }
