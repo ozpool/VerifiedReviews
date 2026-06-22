@@ -7,15 +7,17 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@vr/shared": "workspace:*",
     "@privy-io/react-auth": "^1.92.0",
     "@privy-io/wagmi": "^0.2.13",
+    "@rainbow-me/rainbowkit": "^2.2.3",
     "@tanstack/react-query": "^5.62.7",
     "@tanstack/react-query-devtools": "^5.62.7",
-    "@rainbow-me/rainbowkit": "^2.2.3",
+    "@vr/shared": "workspace:*",
+    "@zxing/browser": "^0.1.5",
     "next": "^14.2.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -24,12 +26,18 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.10.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@types/node": "^22.10.2",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }
