@@ -214,6 +214,24 @@ export function loginOwner(email: string, password: string): Promise<OwnerSessio
   });
 }
 
+export interface RegisterBusinessPayload {
+  name: string;
+  slug: string;
+  category: string;
+  city: string;
+  description?: string;
+  websiteUrl?: string;
+  ownerEmail: string;
+  ownerPassword: string;
+}
+
+/** POST /businesses — submit a new business application (lands in pending). */
+export function registerBusiness(
+  payload: RegisterBusinessPayload,
+): Promise<{ id: string; slug: string; status: string }> {
+  return apiFetch('/businesses', { method: 'POST', body: payload });
+}
+
 export interface AdminSession {
   token: string;
 }
