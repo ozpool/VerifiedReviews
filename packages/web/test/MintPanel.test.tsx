@@ -8,6 +8,11 @@ vi.mock('@/lib/api', async (orig) => {
   return { ...actual, mintVisitProof: vi.fn() };
 });
 
+// qrcode uses canvas which jsdom doesn't implement — stub it out
+vi.mock('qrcode', () => ({
+  default: { toCanvas: vi.fn().mockResolvedValue(undefined) },
+}));
+
 import { MintPanel } from '@/components/staff/MintPanel';
 import { mintVisitProof } from '@/lib/api';
 
