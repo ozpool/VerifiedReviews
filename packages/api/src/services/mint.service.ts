@@ -23,6 +23,15 @@ async function assertUnderRateLimit(businessId: number): Promise<void> {
   }
 }
 
+/** Recent mints for a business (newest first) — backs the staff "today" log. */
+export function listRecentMints(businessId: number, since: Date) {
+  return MintModel.find({ businessId, createdAt: { $gte: since } })
+    .select('customerAddr tokenId txHash createdAt')
+    .sort({ createdAt: -1 })
+    .limit(200)
+    .lean();
+}
+
 /**
  * Orchestrate a VisitProof mint: rate-limit, mint on-chain, then write the audit
  * row. The audit write happens *after* a confirmed tx, so a revert (the

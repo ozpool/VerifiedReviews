@@ -4,9 +4,26 @@ import { mintRequestSchema } from '@vr/shared';
 import { validateBody } from '../middleware/validate';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { forbidden } from '../errors';
-import { requestMint } from '../services/mint.service';
+import { requestMint, listRecentMints } from '../services/mint.service';
 
 export const sbtRouter = Router();
+
+/**
+ * Staff/owner: the recent mint log for their own business (default last 24h),
+ * newest first. Scoped to the token's businessId so one business can't read
+ * another's mint history.
+ */
+sbtRouter.get('/sbt/mints', requireAuth, requireRole('owner', 'staff'), async (req, res, next) => {
+  try {
+    const user = req.user!;
+    if (!('businessId' in user)) throw forbidden('Token is not scoped to a business');
+    const days = Math.min(Math.max(Number(req.query.days) || 1, 1), 30);
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    res.json(await listRecentMints(user.businessId, since));
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * Staff/owner mint a VisitProof to a customer wallet. Scope is enforced against
