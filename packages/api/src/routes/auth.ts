@@ -11,6 +11,7 @@ import { StaffModel } from '../models/staff.model';
 import { validateBody } from './../middleware/validate';
 import { loadConfig } from '../config';
 import { unauthorized } from '../errors';
+import { linkPrivyIdentity } from '../services/customer.service';
 
 export const authRouter = Router();
 
@@ -42,6 +43,24 @@ authRouter.post('/auth/siwe', validateBody(siweSchema), async (req, res, next) =
     res.json({ token, address });
   } catch (err) {
     next(err instanceof Error && err.name === 'AppError' ? err : unauthorized('SIWE login failed'));
+  }
+});
+
+const privySchema = z.object({ token: z.string().min(1) });
+
+/**
+ * Embedded-wallet login. Verify a Privy session server-side, link the social
+ * identity to the wallet Privy attests it controls, then issue the same customer
+ * JWT the SIWE path does — so the rest of the API treats both logins identically.
+ */
+authRouter.post('/auth/privy', validateBody(privySchema), async (req, res, next) => {
+  try {
+    const { token } = req.body as z.infer<typeof privySchema>;
+    const { address } = await linkPrivyIdentity(token);
+    const jwtToken = signToken({ sub: address, role: 'customer' }, loadConfig().JWT_SECRET);
+    res.json({ token: jwtToken, address });
+  } catch (err) {
+    next(err);
   }
 });
 
