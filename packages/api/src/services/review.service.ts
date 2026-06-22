@@ -79,7 +79,7 @@ export async function confirmEvent(event: OnChainReview): Promise<boolean> {
 
 /** Confirmed reviews for a business, optionally full-text filtered. */
 export function searchReviews(businessId: number, q?: string) {
-  const filter: Record<string, unknown> = { businessId, confirmed: true };
+  const filter: Record<string, unknown> = { businessId, confirmed: true, hidden: { $ne: true } };
   if (q) filter.$text = { $search: q };
   return ReviewModel.find(filter)
     .select('businessId reviewer rating text sentiment txHash createdAt')
@@ -90,7 +90,9 @@ export function searchReviews(businessId: number, q?: string) {
 
 /** Aggregate + HMAC-sign a business's confirmed-review counts for the badge. */
 export async function badgeFor(businessId: number): Promise<SignedBadge> {
-  const reviews = await ReviewModel.find({ businessId, confirmed: true }).select('rating').lean();
+  const reviews = await ReviewModel.find({ businessId, confirmed: true, hidden: { $ne: true } })
+    .select('rating')
+    .lean();
   const count = reviews.length;
   const avgRating = count
     ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / count) * 100) / 100

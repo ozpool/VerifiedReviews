@@ -3,9 +3,24 @@ import { z } from 'zod';
 import { reviewIngestSchema } from '@vr/shared';
 import { validateBody } from '../middleware/validate';
 import { ingestReviewText, searchReviews, badgeFor } from '../services/review.service';
+import { flagReview } from '../services/flag.service';
 import { badRequest } from '../errors';
 
 export const reviewRouter = Router();
+
+const flagSchema = z.object({ reason: z.string().trim().min(3).max(500) });
+
+/** Public: report a review for spam/abuse. Moderation signal only — never
+ * affects the chain. An admin reviews each flag in the moderation queue. */
+reviewRouter.post('/reviews/:id/flag', validateBody(flagSchema), async (req, res, next) => {
+  try {
+    const { reason } = req.body as z.infer<typeof flagSchema>;
+    const flag = await flagReview(req.params.id!, reason);
+    res.status(201).json({ id: flag.id, status: flag.status });
+  } catch (err) {
+    next(err);
+  }
+});
 
 /** Public: a customer posts their review text + the on-chain commitment. The
  * service rejects any text whose hash doesn't match the committed contentHash. */
