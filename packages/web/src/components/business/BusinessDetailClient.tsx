@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchBusiness, fetchBadge, fetchReviews, ApiError } from '@/lib/api';
@@ -97,6 +98,12 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
           </div>
         </div>
         <VerifiedStamp count={badge?.count ?? 0} />
+        <Link
+          href={`/b/${business.slug}/write`}
+          className="ml-auto inline-flex items-center gap-2 bg-accent text-paper px-5 py-2.5 rounded text-sm font-medium tracking-wide hover:bg-accent-light transition-colors"
+        >
+          Write a review
+        </Link>
       </div>
 
       {/* Reviews */}
