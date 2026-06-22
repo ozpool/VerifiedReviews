@@ -8,12 +8,15 @@
  * as low as possible (a leaf provider wrapper) so the layout above it stays
  * server-rendered.
  */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { wagmiConfig } from '@/lib/wagmi';
+import { isPrivyEnabled } from '@/lib/wagmi.privy';
+import { makeQueryClient } from '@/lib/queryClient';
+import { EmbeddedWalletProvider } from './EmbeddedWalletProvider';
 import { useState } from 'react';
 
 // RainbowKit's lightTheme override matching editorial-trust tokens.
@@ -25,24 +28,20 @@ const rbkTheme = lightTheme({
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  // When a Privy app id is configured, use the embedded-wallet tree (social
+  // login + hidden wallet). Otherwise fall back to the plain wagmi + RainbowKit
+  // path so the app still builds and runs without a Privy account.
+  if (isPrivyEnabled) {
+    return <EmbeddedWalletProvider>{children}</EmbeddedWalletProvider>;
+  }
+  return <FallbackProviders>{children}</FallbackProviders>;
+}
+
+/** Original wagmi + RainbowKit provider tree, used when Privy is not configured. */
+function FallbackProviders({ children }: { children: React.ReactNode }) {
   // QueryClient is created inside the component with useState so that each
   // request in SSR gets its own instance (prevents cross-request data leakage).
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            // Stale after 30s; data shows immediately while revalidating.
-            staleTime: 30_000,
-            // Don't retry on 4xx — those are permanent errors.
-            retry: (failureCount, error) => {
-              if (error instanceof Error && error.message.includes('4')) return false;
-              return failureCount < 2;
-            },
-          },
-        },
-      }),
-  );
+  const [queryClient] = useState(makeQueryClient);
 
   return (
     <WagmiProvider config={wagmiConfig}>
@@ -50,9 +49,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <RainbowKitProvider theme={rbkTheme} modalSize="compact">
           {children}
         </RainbowKitProvider>
-        {process.env['NODE_ENV'] === 'development' && (
-          <ReactQueryDevtools initialIsOpen={false} />
-        )}
+        {process.env['NODE_ENV'] === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
     </WagmiProvider>
   );
