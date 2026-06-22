@@ -7,6 +7,7 @@ import { RatingStars } from './RatingStars';
 import { VerifiedStamp } from './VerifiedStamp';
 import { ReviewCard } from './ReviewCard';
 import { Loading, Empty, ErrorState } from '@/components/ui/StatusStates';
+import { safeHttpUrl } from '@/lib/url';
 
 /**
  * Business detail: profile, the on-chain-verified count + average, and the
@@ -53,6 +54,8 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
 
   const badge = badgeQuery.data;
   const reviews = reviewsQuery.data ?? [];
+  // Only ever link out to a validated http(s) URL — rejects javascript:/data: etc.
+  const website = safeHttpUrl(business.websiteUrl);
 
   return (
     <div className="flex flex-col gap-10">
@@ -70,14 +73,14 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
         {business.description && (
           <p className="text-base text-muted leading-relaxed max-w-2xl">{business.description}</p>
         )}
-        {business.websiteUrl && (
+        {website && (
           <a
-            href={business.websiteUrl}
+            href={website}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-accent hover:text-accent-light transition-colors w-fit"
           >
-            {business.websiteUrl.replace(/^https?:\/\//, '')} ↗
+            {website.replace(/^https?:\/\//, '')} ↗
           </a>
         )}
       </header>
