@@ -7,8 +7,10 @@ import { registryAddress, isChainConfigured } from '@/lib/contracts';
 import { ingestReview } from '@/lib/api';
 import { reviewErrorMessage } from '@/lib/reviewErrors';
 import { txUrl, shortHex } from '@/lib/explorer';
+import { usePrivy } from '@privy-io/react-auth';
 import { Button } from '@/components/ui/Button';
 import { StarPicker } from './StarPicker';
+import { isPrivyEnabled } from '@/lib/wagmi.privy';
 
 type Phase = 'idle' | 'busy' | 'done' | 'error';
 
@@ -88,7 +90,11 @@ export function ReviewForm({ businessId }: { businessId: number }) {
     );
   }
   if (!isConnected) {
-    return <Notice>Connect your wallet (top right) to write a verified review.</Notice>;
+    return isPrivyEnabled ? (
+      <PrivyLoginPrompt />
+    ) : (
+      <Notice>Connect your wallet (top right) to write a verified review.</Notice>
+    );
   }
   if (wrongChain) {
     return <Notice>Switch your wallet to Arbitrum Sepolia to submit a review.</Notice>;
@@ -157,5 +163,21 @@ function Notice({ children }: { children: React.ReactNode }) {
     <div className="border border-border rounded p-5 text-sm text-muted leading-relaxed">
       {children}
     </div>
+  );
+}
+
+/** Only rendered when isPrivyEnabled — safe to call usePrivy here. */
+function PrivyLoginPrompt() {
+  const { login } = usePrivy();
+  return (
+    <Notice>
+      <button
+        onClick={login}
+        className="text-accent underline underline-offset-2 hover:text-accent-light transition-colors"
+      >
+        Sign in with Google or email
+      </button>{' '}
+      to write a verified review — no crypto wallet needed.
+    </Notice>
   );
 }
