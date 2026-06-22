@@ -1,32 +1,40 @@
 /**
  * Landing page — server component.
  *
- * Demonstrates the foundation: editorial-trust aesthetic, working wallet
- * connect, and live API health check. No data fetching here yet — the wallet
- * status and health indicator are client components that fetch their own data.
- * Business/review listing comes in PR #11.
+ * Editorial-trust aesthetic: receipt-paper canvas, optical serif headlines, the
+ * stamp motif for anything "verified". CTAs route into the live browse flow.
  */
-import { WalletStatus } from '@/components/ui/WalletStatus';
-import { ApiHealth } from '@/components/ui/ApiHealth';
+import Link from 'next/link';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
 import { Card } from '@/components/ui/Card';
+
+const STEPS = [
+  {
+    n: '01',
+    title: 'Pay & get a receipt',
+    body: 'At checkout, staff scan your wallet. A soulbound token is minted on-chain — a receipt locked to you, forever.',
+  },
+  {
+    n: '02',
+    title: 'Write within 60 days',
+    body: 'The review contract checks you hold a recent visit proof. No receipt, or one older than 60 days, and it reverts.',
+  },
+  {
+    n: '03',
+    title: 'Anyone can verify it',
+    body: 'Every published review links to its on-chain transaction. The counts are computed from the chain, not from us.',
+  },
+];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-paper">
-      {/* Top bar */}
-      <header className="border-b border-border">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="font-display text-xl font-semibold tracking-tight text-ink">
-            Verified<span className="text-accent">Reviews</span>
-          </span>
-          <WalletStatus />
-        </div>
-      </header>
+    <>
+      <SiteHeader />
 
       <main className="max-w-5xl mx-auto px-6">
         {/* Hero */}
         <section className="py-22 flex flex-col gap-6 max-w-2xl">
-          {/* Eyebrow label — receipt motif */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-px bg-accent" aria-hidden="true" />
             <span className="text-xs font-medium tracking-widest uppercase text-accent">
@@ -34,103 +42,85 @@ export default function HomePage() {
             </span>
           </div>
 
-          <h1 className="font-display text-5xl font-bold leading-[1.08] text-ink">
+          <h1 className="font-display text-5xl sm:text-6xl font-bold leading-[1.05] text-ink">
             Reviews you can
             <br />
             actually trust.
           </h1>
 
           <p className="text-base text-muted leading-relaxed max-w-lg">
-            Every review is backed by a soulbound visit proof — a non-transferable
-            on-chain receipt minted at the point of sale. No receipt, no review.
+            Every review is backed by a soulbound visit proof — a non-transferable on-chain receipt
+            minted at the point of sale. No receipt, no review. No fakes, no paid posts.
           </p>
 
-          {/* CTA row */}
-          <div className="flex items-center gap-4 pt-2">
-            {/* Placeholder CTAs — wired to routes in PR #11 */}
-            <a
-              href="#explore"
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <Link
+              href="/businesses"
               className="inline-flex items-center gap-2 bg-accent text-paper px-7 py-3.5 rounded text-sm font-medium tracking-wide hover:bg-accent-light transition-colors"
             >
               Explore businesses
-            </a>
-            <a
-              href="#learn"
+            </Link>
+            <Link
+              href="#how"
               className="inline-flex items-center gap-2 text-ink border border-border px-7 py-3.5 rounded text-sm font-medium tracking-wide hover:bg-subtle transition-colors"
             >
               How it works
-            </a>
+            </Link>
           </div>
         </section>
 
         <hr className="border-border" />
 
-        {/* Foundation demo grid */}
-        <section id="explore" className="py-16 grid sm:grid-cols-2 gap-6">
-          {/* Wallet panel */}
-          <Card>
-            <h2 className="font-display text-lg font-semibold mb-1">Wallet</h2>
-            <p className="text-sm text-muted mb-4">
-              Connect your wallet to submit reviews or mint visit receipts.
-            </p>
-            <WalletStatus />
-          </Card>
-
-          {/* API status panel */}
-          <Card>
-            <h2 className="font-display text-lg font-semibold mb-1">
-              API status
-            </h2>
-            <p className="text-sm text-muted mb-4">
-              Live check against the VerifiedReviews backend.
-            </p>
-            <ApiHealth />
-          </Card>
-
-          {/* Verified badge demo — stamp motif */}
-          <Card stamp className="sm:col-span-2">
-            <div className="flex items-start gap-4">
-              <div className="shrink-0 w-10 h-10 rounded-sm bg-accent/10 flex items-center justify-center">
-                {/* Checkmark stamp icon */}
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="w-5 h-5 text-accent"
-                >
-                  <path
-                    d="M4 10.5l4.5 4.5 7.5-9"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+        {/* How it works */}
+        <section id="how" className="py-18 scroll-mt-20">
+          <h2 className="font-display text-2xl font-semibold text-ink mb-8">How it works</h2>
+          <div className="grid sm:grid-cols-3 gap-6">
+            {STEPS.map((s) => (
+              <div key={s.n} className="flex flex-col gap-3">
+                <span className="font-display text-3xl font-bold text-accent/30 tabular-nums">
+                  {s.n}
+                </span>
+                <h3 className="font-display text-lg font-semibold text-ink">{s.title}</h3>
+                <p className="text-sm text-muted leading-relaxed">{s.body}</p>
               </div>
-              <div>
-                <p className="font-display font-semibold text-ink">
-                  What &ldquo;verified&rdquo; means here
-                </p>
-                <p className="text-sm text-muted mt-1 leading-relaxed">
-                  When staff scan a customer&apos;s wallet at checkout, a soulbound
-                  token is minted on Arbitrum Sepolia — a cryptographic receipt
-                  locked to that wallet forever. The review contract checks for
-                  that token (held, not transferred) and rejects reviews older
-                  than 60 days. Faking a review means faking a blockchain
-                  transaction.
-                </p>
-              </div>
-            </div>
-          </Card>
+            ))}
+          </div>
         </section>
+
+        {/* What "verified" means — stamp callout */}
+        <Card stamp className="mb-18">
+          <div className="flex items-start gap-4">
+            <div className="shrink-0 w-10 h-10 rounded-sm bg-accent/10 flex items-center justify-center">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                fill="none"
+                className="w-5 h-5 text-accent"
+              >
+                <path
+                  d="M4 10.5l4.5 4.5 7.5-9"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <div>
+              <p className="font-display font-semibold text-ink">
+                What &ldquo;verified&rdquo; means here
+              </p>
+              <p className="text-sm text-muted mt-1 leading-relaxed max-w-2xl">
+                The review contract on Arbitrum Sepolia checks for a soulbound token — held, not
+                transferred — and rejects reviews older than 60 days. Faking a review means faking a
+                blockchain transaction, which you can&apos;t. That&apos;s the whole idea.
+              </p>
+            </div>
+          </div>
+        </Card>
       </main>
 
-      <footer className="border-t border-border mt-8">
-        <div className="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between text-xs text-muted">
-          <span>VerifiedReviews · Arbitrum Sepolia</span>
-          <ApiHealth />
-        </div>
-      </footer>
-    </div>
+      <SiteFooter />
+    </>
   );
 }
