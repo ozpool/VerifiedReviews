@@ -113,10 +113,7 @@ describe('VisitProofSBT', () => {
 
     it('reverts locked() for a nonexistent token', async () => {
       const { sbt } = await loadFixture(deployFixture);
-      await expect(sbt.locked(999n)).to.be.revertedWithCustomError(
-        sbt,
-        'ERC721NonexistentToken',
-      );
+      await expect(sbt.locked(999n)).to.be.revertedWithCustomError(sbt, 'ERC721NonexistentToken');
     });
 
     it('reverts transferFrom', async () => {
@@ -153,6 +150,34 @@ describe('VisitProofSBT', () => {
       expect(await sbt.supportsInterface('0x80ac58cd')).to.equal(true); // ERC-721
       expect(await sbt.supportsInterface('0x7965db0b')).to.equal(true); // AccessControl
       expect(await sbt.supportsInterface('0xffffffff')).to.equal(false);
+    });
+  });
+
+  describe('tokenURI', () => {
+    /** Decode a base64 data URI back into its JSON object. */
+    function decodeDataUri(uri: string) {
+      const prefix = 'data:application/json;base64,';
+      expect(uri.startsWith(prefix)).to.equal(true);
+      return JSON.parse(Buffer.from(uri.slice(prefix.length), 'base64').toString('utf8'));
+    }
+
+    it('returns on-chain JSON metadata carrying business id and visit time', async () => {
+      const { sbt, minter, customer } = await loadFixture(deployFixture);
+      await sbt.connect(minter).mint(customer.address, BUSINESS_ID);
+      const [, visitedAt] = await sbt.latestVisitOf(customer.address, BUSINESS_ID);
+
+      const meta = decodeDataUri(await sbt.tokenURI(1n));
+      expect(meta.name).to.equal('VisitProof #1');
+      const byTrait = Object.fromEntries(
+        meta.attributes.map((a: { trait_type: string; value: unknown }) => [a.trait_type, a.value]),
+      );
+      expect(byTrait['Business ID']).to.equal(Number(BUSINESS_ID));
+      expect(byTrait['Visited At']).to.equal(Number(visitedAt));
+    });
+
+    it('reverts for a nonexistent token', async () => {
+      const { sbt } = await loadFixture(deployFixture);
+      await expect(sbt.tokenURI(999n)).to.be.revertedWithCustomError(sbt, 'ERC721NonexistentToken');
     });
   });
 });

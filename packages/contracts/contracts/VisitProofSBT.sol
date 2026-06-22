@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {IERC5192} from "./interfaces/IERC5192.sol";
 
 /// @title VisitProofSBT
@@ -104,6 +106,25 @@ contract VisitProofSBT is ERC721, AccessControl, IERC5192 {
     function locked(uint256 tokenId) external view returns (bool) {
         _requireOwned(tokenId); // reverts ERC721NonexistentToken if it doesn't exist
         return true;
+    }
+
+    /// @notice On-chain ERC-721 metadata, so the receipt renders in wallets with
+    ///         no server dependency. Returns a base64 data URI carrying the
+    ///         business id and visit timestamp recorded at mint.
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        _requireOwned(tokenId);
+        VisitData memory v = visits[tokenId];
+        string memory json = string.concat(
+            '{"name":"VisitProof #',
+            Strings.toString(tokenId),
+            '","description":"A soulbound proof of a visit to a VerifiedReviews business. Non-transferable.",',
+            '"attributes":[{"trait_type":"Business ID","value":',
+            Strings.toString(v.businessId),
+            '},{"display_type":"date","trait_type":"Visited At","value":',
+            Strings.toString(v.visitedAt),
+            "}]}"
+        );
+        return string.concat("data:application/json;base64,", Base64.encode(bytes(json)));
     }
 
     /// @dev The single transfer chokepoint in OZ v5. Allow mint (from == 0) and

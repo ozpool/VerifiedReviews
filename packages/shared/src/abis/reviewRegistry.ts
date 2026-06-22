@@ -15,6 +15,17 @@ export const reviewRegistryAbi = [
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "AlreadyReviewed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint8",
         "name": "starRating",
         "type": "uint8"
@@ -100,6 +111,25 @@ export const reviewRegistryAbi = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "reviewed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "used",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
