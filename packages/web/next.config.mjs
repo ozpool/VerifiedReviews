@@ -11,6 +11,19 @@ const nextConfig = {
     ignoreDuringBuilds: false,
   },
 
+  experimental: {
+    // Load only the used members of these large wallet/query libraries instead
+    // of their whole barrel files — leaner compiles in dev and smaller bundles.
+    optimizePackageImports: [
+      '@rainbow-me/rainbowkit',
+      '@privy-io/react-auth',
+      '@privy-io/wagmi',
+      'wagmi',
+      'viem',
+      '@tanstack/react-query',
+    ],
+  },
+
   webpack(config) {
     // @metamask/sdk pulls in @react-native-async-storage/async-storage as an
     // optional dep that doesn't exist in a browser build. Stub it out so the
