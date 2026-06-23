@@ -5,14 +5,14 @@ here because a smart contract enforced it — not because a server promised to.
 
 To review a business you must prove you actually visited recently. At checkout the
 business mints you a **VisitProof**: a non-transferable (soulbound, ERC-5192)
-token that records *when* you visited. The review contract then accepts a review
+token that records _when_ you visited. The review contract then accepts a review
 **only** if your wallet holds a VisitProof for that business that is less than 60
 days old. The check runs on-chain, so it cannot be faked, bribed, or bypassed —
 even by us.
 
 > **The one rule that defines this project:** the gate lives in the contract, not
 > the API. The backend is a convenience layer for search, text storage, and UX.
-> It is *never* a security boundary. A review is valid iff `ReviewRegistry`
+> It is _never_ a security boundary. A review is valid iff `ReviewRegistry`
 > accepts it on-chain.
 
 ---
@@ -54,9 +54,6 @@ even by us.
 on-chain yourself → the contract checks the gate → the indexer ingests the text
 → the business embeds a signed badge of verified counts.
 
-Full design in [`archi.md`](./archi.md); the delivery plan (milestones, PRs,
-commits) in [`git.md`](./git.md).
-
 ---
 
 ## Monorepo layout
@@ -76,13 +73,13 @@ content-hash) is defined once and imported by both `api` and `web`.
 
 ## Tech stack
 
-| Layer     | Tech                                                       |
-| --------- | ---------------------------------------------------------- |
-| Chain     | Arbitrum Sepolia · Solidity · Hardhat · OpenZeppelin      |
-| Backend   | Express · TypeScript · Viem · MongoDB (Mongoose) · zod    |
-| Auth      | SIWE (wallet sign-in) · JWT (staff/admin)                |
-| Frontend  | Next.js (App Router) · Wagmi · Viem · TanStack Query      |
-| Tooling   | pnpm workspaces · Vitest · ESLint · Prettier · GitHub CI  |
+| Layer    | Tech                                                     |
+| -------- | -------------------------------------------------------- |
+| Chain    | Arbitrum Sepolia · Solidity · Hardhat · OpenZeppelin     |
+| Backend  | Express · TypeScript · Viem · MongoDB (Mongoose) · zod   |
+| Auth     | SIWE (wallet sign-in) · JWT (staff/admin)                |
+| Frontend | Next.js (App Router) · Wagmi · Viem · TanStack Query     |
+| Tooling  | pnpm workspaces · Vitest · ESLint · Prettier · GitHub CI |
 
 ---
 
@@ -100,19 +97,19 @@ pnpm -F @vr/web dev           # Next.js app
 ```
 
 Environment variables (validated at boot; secrets never logged or sent to the
-browser) are documented in the env matrix in [`archi.md`](./archi.md).
+browser) are documented in each package's `.env.example`.
 
 ---
 
 ## Status & roadmap
 
-| Milestone               | Scope                                            | State |
-| ----------------------- | ------------------------------------------------ | ----- |
-| 1 — Foundation          | Monorepo, shared schemas, CI                     | ✅    |
-| 2 — Smart contracts     | VisitProofSBT, ReviewRegistry, deploy            | ✅    |
-| 3 — Backend API         | Auth, onboarding, mint, indexer, search, badge   | ✅    |
-| 4 — Frontend            | Public/customer/staff/business/admin surfaces    | ⬜    |
-| 5 — Hardening + deploy  | E2E tests, security hardening, deployment        | ⬜    |
+| Milestone              | Scope                                          | State |
+| ---------------------- | ---------------------------------------------- | ----- |
+| 1 — Foundation         | Monorepo, shared schemas, CI                   | ✅    |
+| 2 — Smart contracts    | VisitProofSBT, ReviewRegistry, deploy          | ✅    |
+| 3 — Backend API        | Auth, onboarding, mint, indexer, search, badge | ✅    |
+| 4 — Frontend           | Public/customer/staff/business/admin surfaces  | ⬜    |
+| 5 — Hardening + deploy | E2E tests, security hardening, deployment      | ⬜    |
 
 Tests: 116 passing (contracts 27 · api 43 · shared 46). The contract gate —
 soulbound transfer reverts, holder check, and the 60-day recency boundaries — is
