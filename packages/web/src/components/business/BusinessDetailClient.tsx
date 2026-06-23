@@ -7,8 +7,11 @@ import { fetchBusiness, fetchBadge, fetchReviews, ApiError } from '@/lib/api';
 import { RatingStars } from './RatingStars';
 import { VerifiedStamp } from './VerifiedStamp';
 import { ReviewCard } from './ReviewCard';
+import { BusinessPattern } from './BusinessPattern';
+import { Mascot } from './Mascot';
 import { Loading, Empty, ErrorState } from '@/components/ui/StatusStates';
 import { safeHttpUrl } from '@/lib/url';
+import { identityFor } from '@/lib/identity';
 
 /**
  * Business detail: profile, the on-chain-verified count + average, and the
@@ -57,15 +60,26 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
   const reviews = reviewsQuery.data ?? [];
   // Only ever link out to a validated http(s) URL — rejects javascript:/data: etc.
   const website = safeHttpUrl(business.websiteUrl);
+  const id = identityFor(business.slug);
 
   return (
     <div className="flex flex-col gap-10">
+      {/* Identity hero: this business's generative pattern (slowly drifting) with
+          its mascot roaming the strip while you read. Click it to say hi. */}
+      <div className="relative -mt-2 h-32 sm:h-40 rounded-lg overflow-hidden border border-border">
+        <BusinessPattern identity={id} ambient className="absolute inset-0 h-full w-full" />
+        <Mascot slug={business.slug} className="absolute inset-x-2 bottom-1 h-12" />
+      </div>
+
       {/* Profile header */}
       <header className="flex flex-col gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="w-8 h-px bg-accent" aria-hidden="true" />
           <span className="text-xs font-medium tracking-widest uppercase text-muted">
             {business.category} · {business.city}
+          </span>
+          <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted/80">
+            {id.vibe.join(' · ')}
           </span>
         </div>
         <h1 className="font-display text-4xl sm:text-5xl font-bold leading-[1.05] text-ink">
