@@ -5,6 +5,7 @@ import { nextSequence } from '../models/counter.model';
 import { hashPassword } from '../auth/password';
 import { deriveMinterAddress } from '../chain/minter';
 import { getMinterRegistrar, type MinterRegistrar } from '../chain/registrar';
+import { getMinterFunder, type MinterFunder } from '../chain/minter-funder';
 import { badGateway, conflict, notFound } from '../errors';
 
 const PUBLIC_FIELDS = 'slug name category city description websiteUrl businessId' as const;
@@ -88,10 +89,17 @@ export function listBusinesses(status?: BusinessStatus) {
  * minter on-chain BEFORE marking it approved. If the on-chain registration fails
  * the approval fails too — otherwise we'd hand out an "approved" business whose
  * staff can never mint (the contract would revert with NotBusinessMinter).
+ *
+ * Once approved we also seed the minter with starting gas (B) so staff can mint
+ * immediately. That's best-effort: a treasury hiccup must not block approval —
+ * the background refiller (C) is the backstop, and the minter can be funded by
+ * hand. Unlike registration (a correctness prerequisite), funding is just a
+ * convenience and the contract works the moment it has gas.
  */
 export async function approveBusiness(
   id: string,
   registrar: MinterRegistrar = getMinterRegistrar(),
+  funder: MinterFunder = getMinterFunder(),
 ): Promise<HydratedDocument<BusinessDoc>> {
   const business = await BusinessModel.findById(id);
   if (!business) throw notFound('Business not found');
@@ -106,7 +114,15 @@ export async function approveBusiness(
   }
 
   business.set({ status: 'approved', businessId, minterAddress });
-  return business.save();
+  const saved = await business.save();
+
+  try {
+    await funder.fund(minterAddress);
+  } catch (err) {
+    console.error('minter funding failed at approval:', err instanceof Error ? err.message : err);
+  }
+
+  return saved;
 }
 
 /** Active staff for a business, for the owner's staff-management view. */
