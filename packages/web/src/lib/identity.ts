@@ -8,8 +8,22 @@
  * stable and repeatable rather than truly random.
  */
 
-export const PATTERNS = ['arcs', 'grid', 'waves', 'scatter', 'rays'] as const;
+export const PATTERNS = ['arcs', 'grid', 'waves', 'scatter', 'rays', 'bloom', 'checker'] as const;
 export const MASCOTS = ['fox', 'cat', 'owl', 'rabbit'] as const;
+export const VIBES = [
+  'Cozy',
+  'Bright',
+  'Bold',
+  'Calm',
+  'Lively',
+  'Refined',
+  'Warm',
+  'Crisp',
+  'Playful',
+  'Classic',
+  'Snug',
+  'Vivid',
+] as const;
 
 export type PatternKind = (typeof PATTERNS)[number];
 export type MascotKind = (typeof MASCOTS)[number];
@@ -23,8 +37,12 @@ export type Identity = {
   tone: string;
   /** Soft tint for fills over the paper background. */
   wash: string;
+  /** Near-white highlight tint, for contrast on top of the wash. */
+  glow: string;
   pattern: PatternKind;
   mascot: MascotKind;
+  /** Two distinct adjectives — a tiny deterministic personality tag. */
+  vibe: [string, string];
 };
 
 /** FNV-1a 32-bit hash — tiny, fast, stable across runs and platforms. */
@@ -62,7 +80,12 @@ export function identityFor(slug: string): Identity {
   const ink = `hsl(${hue} 48% 42%)`;
   const tone = `hsl(${hue} 42% 62%)`;
   const wash = `hsl(${hue} 46% 91%)`;
+  const glow = `hsl(${hue} 60% 97%)`;
   const pattern = pick(rng, PATTERNS);
   const mascot = pick(rng, MASCOTS);
-  return { seed, hue, ink, tone, wash, pattern, mascot };
+  // Two distinct adjectives for the personality tag.
+  const v1 = pick(rng, VIBES);
+  let v2 = pick(rng, VIBES);
+  if (v2 === v1) v2 = VIBES[(VIBES.indexOf(v1) + 5) % VIBES.length]!;
+  return { seed, hue, ink, tone, wash, glow, pattern, mascot, vibe: [v1, v2] };
 }

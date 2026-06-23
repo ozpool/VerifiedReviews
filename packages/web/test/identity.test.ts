@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { identityFor, PATTERNS, MASCOTS } from '@/lib/identity';
+import { identityFor, PATTERNS, MASCOTS, VIBES } from '@/lib/identity';
 
 describe('identityFor', () => {
   it('is deterministic — same slug yields the same identity', () => {
@@ -13,6 +13,14 @@ describe('identityFor', () => {
     expect(PATTERNS).toContain(id.pattern);
     expect(MASCOTS).toContain(id.mascot);
     expect(id.ink).toMatch(/^hsl\(/);
+  });
+
+  it('gives two distinct vibe adjectives from the set', () => {
+    const id = identityFor('rooftop-grill');
+    expect(id.vibe).toHaveLength(2);
+    expect(id.vibe[0]).not.toBe(id.vibe[1]);
+    expect(VIBES).toContain(id.vibe[0]);
+    expect(VIBES).toContain(id.vibe[1]);
   });
 
   it('differs across distinct slugs', () => {
