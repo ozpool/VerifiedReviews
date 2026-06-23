@@ -1,0 +1,55 @@
+# Render blueprint for the VerifiedReviews API (Express server).
+# The web app (Next.js) deploys separately on Vercel — see DEPLOY.md.
+#
+# Secrets are marked `sync: false`: Render will prompt you to set them in the
+# dashboard rather than reading them from this committed file. Never put a real
+# key here.
+services:
+  - type: web
+    name: vr-api
+    runtime: node
+    plan: free
+    # Build from the repo root so pnpm can resolve the workspace (@vr/shared).
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: pnpm --filter @vr/api start
+    # /ready returns 200 only once Mongo is connected, so a bad MONGO_URI fails
+    # the deploy visibly instead of serving a broken API.
+    healthCheckPath: /ready
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: '20.18.0'
+      # Render injects PORT automatically; the server reads it. Do not hardcode.
+      #
+      # --- Secrets / per-deploy values: set these in the Render dashboard ---
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: APP_DOMAIN # your Vercel web host, e.g. vr-web.vercel.app
+        sync: false
+      - key: CORS_ORIGIN # MUST be your Vercel web URL (prod boot fails on localhost)
+        sync: false
+      - key: RPC_URL
+        sync: false
+      - key: INDEXER_RPC_URL
+        sync: false
+      - key: SBT_ADDRESS
+        sync: false
+      - key: REGISTRY_ADDRESS
+        sync: false
+      - key: MINTER_MNEMONIC
+        sync: false
+      - key: ADMIN_PRIVATE_KEY
+        sync: false
+      - key: BADGE_HMAC_KEY # required in production
+        sync: false
+      - key: PRIVY_APP_ID
+        sync: false
+      - key: PRIVY_APP_SECRET
+        sync: false
+      - key: GAS_TANK_PRIVATE_KEY
+        sync: false

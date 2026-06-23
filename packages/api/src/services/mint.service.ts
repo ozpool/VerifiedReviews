@@ -3,6 +3,7 @@ import { loadConfig } from '../config';
 import { MintModel, type MintDoc } from '../models/mint.model';
 import { BusinessModel } from '../models/business.model';
 import { getMintOrchestrator, type MintOrchestrator } from '../chain/orchestrator';
+import { getGasTank, type GasTank } from '../chain/gas-tank';
 import { badGateway, notFound, tooManyRequests } from '../errors';
 
 interface MintInput {
@@ -20,6 +21,25 @@ async function assertUnderRateLimit(businessId: number): Promise<void> {
   const recent = await MintModel.countDocuments({ businessId, createdAt: { $gte: since } });
   if (recent >= MINT_RATE_MAX) {
     throw tooManyRequests('Mint rate limit exceeded for this business');
+  }
+}
+
+/** Cap how many times one customer can be minted at a business in the rolling
+ * window (default 2 per 24h). customerAddr is stored lowercased, so we match on
+ * the normalized form. This is an anti-abuse policy, not the review gate. */
+async function assertCustomerUnderDailyLimit(
+  businessId: number,
+  customerAddr: string,
+): Promise<void> {
+  const { CUSTOMER_MINT_DAILY_MAX, CUSTOMER_MINT_WINDOW_SEC } = loadConfig();
+  const since = new Date(Date.now() - CUSTOMER_MINT_WINDOW_SEC * 1000);
+  const recent = await MintModel.countDocuments({
+    businessId,
+    customerAddr: customerAddr.toLowerCase().trim(),
+    createdAt: { $gte: since },
+  });
+  if (recent >= CUSTOMER_MINT_DAILY_MAX) {
+    throw tooManyRequests('This customer has reached the visit limit for now — try again later.');
   }
 }
 
@@ -41,11 +61,13 @@ export function listRecentMints(businessId: number, since: Date) {
 export async function requestMint(
   input: MintInput,
   orchestrator: MintOrchestrator = getMintOrchestrator(),
+  gasTank: GasTank = getGasTank(),
 ): Promise<HydratedDocument<MintDoc>> {
   const business = await BusinessModel.findOne({ businessId: input.businessId });
   if (!business || business.status !== 'approved') throw notFound('Approved business not found');
 
   await assertUnderRateLimit(input.businessId);
+  await assertCustomerUnderDailyLimit(input.businessId, input.customerAddr);
 
   let result;
   try {
@@ -54,11 +76,22 @@ export async function requestMint(
     throw badGateway(err instanceof Error ? err.message : 'mint failed on-chain');
   }
 
-  return MintModel.create({
+  const doc = await MintModel.create({
     businessId: input.businessId,
     customerAddr: input.customerAddr,
     staffId: input.staffId,
     tokenId: result.tokenId,
     txHash: result.txHash,
   });
+
+  // Fund the customer's gas so they can submit their review with no fee and no
+  // wallet popup. Best-effort: a failed/over-budget top-up must never undo a
+  // confirmed mint, so we log and move on rather than throwing.
+  try {
+    await gasTank.topUp(input.customerAddr);
+  } catch (err) {
+    console.error('gas-tank top-up failed:', err instanceof Error ? err.message : err);
+  }
+
+  return doc;
 }

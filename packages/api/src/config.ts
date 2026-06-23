@@ -1,6 +1,15 @@
 import { parseEnv } from '@vr/shared';
 import { z } from 'zod';
 
+/** Normalize a private key from env: trim, treat blank as unset, and prepend the
+ * `0x` viem requires when the user pasted a bare 64-hex key. */
+function normalizePrivateKey(value: unknown): string | undefined {
+  if (typeof value !== 'string') return value as undefined;
+  const v = value.trim();
+  if (v === '') return undefined;
+  return /^[0-9a-fA-F]{64}$/.test(v) ? `0x${v}` : v;
+}
+
 /** Runtime configuration, validated at boot so a misconfigured deploy fails fast. */
 const configSchema = z
   .object({
@@ -32,6 +41,12 @@ const configSchema = z
     // within MINT_RATE_WINDOW_SEC. Defaults are sane; tests lower them.
     MINT_RATE_MAX: z.coerce.number().int().positive().default(30),
     MINT_RATE_WINDOW_SEC: z.coerce.number().int().positive().default(60),
+    // Per-customer cap: at most this many VisitProofs to the same customer at the
+    // same business within CUSTOMER_MINT_WINDOW_SEC (default 2 per 24h). Stops a
+    // customer racking up reviews by being minted over and over — even if staff
+    // scans them again, the extra mint is refused.
+    CUSTOMER_MINT_DAILY_MAX: z.coerce.number().int().positive().default(2),
+    CUSTOMER_MINT_WINDOW_SEC: z.coerce.number().int().positive().default(86_400),
     // Deployed ReviewRegistry address the indexer reads ReviewSubmitted from.
     REGISTRY_ADDRESS: z
       .string()
@@ -55,6 +70,37 @@ const configSchema = z
     // General per-IP API rate limit (the mint path has its own tighter limit).
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
     RATE_LIMIT_WINDOW_SEC: z.coerce.number().int().positive().default(60),
+    // Gas-tank wallet: a server-funded account holding free Arbitrum Sepolia
+    // testnet ETH. At mint time the API sends a tiny top-up to the customer so
+    // their embedded wallet can pay its own (free, testnet) gas when reviewing —
+    // the customer never has to fund anything. Optional: when unset the top-up is
+    // a no-op and customers must already hold gas. NEVER a real-money key on
+    // mainnet; testnet only for now.
+    // Accept a bare 64-hex key or a 0x-prefixed one; blank means "disabled".
+    // Normalized to 0x form so viem's privateKeyToAccount accepts it.
+    GAS_TANK_PRIVATE_KEY: z.preprocess(
+      normalizePrivateKey,
+      z
+        .string()
+        .regex(/^0x[a-fA-F0-9]{64}$/, 'GAS_TANK_PRIVATE_KEY must be a 32-byte hex key')
+        .optional(),
+    ),
+    // How much testnet ETH to send per top-up (a couple of submits' worth).
+    GAS_TANK_TOPUP_ETH: z.string().default('0.0005'),
+    // Skip the top-up when the customer already holds at least this much, so we
+    // don't drain the tank on repeat visitors who still have gas.
+    GAS_TANK_MIN_BALANCE_ETH: z.string().default('0.0003'),
+    // Minter gas funding (paid from the admin/treasury wallet, ADMIN_PRIVATE_KEY).
+    // A business's minter needs ETH to pay gas when it mints receipts. We fund it
+    // automatically at approval (B) and refill it on a schedule (C) so staff never
+    // hit an out-of-gas mint. Amount sent each top-up:
+    MINTER_FUND_AMOUNT_ETH: z.string().default('0.02'),
+    // Top up a minter only when it dips below this — covers thousands of mints, so
+    // refills are rare.
+    MINTER_MIN_BALANCE_ETH: z.string().default('0.005'),
+    // How often the background refiller sweeps every approved business's minter.
+    // Default 1h; minters drain slowly so this need not be frequent.
+    MINTER_REFILL_POLL_MS: z.coerce.number().int().positive().default(3_600_000),
   })
   // Fail a production boot fast if integrity-critical secrets are missing, so a
   // misconfigured deploy never serves unsigned badges or a weak CORS posture.

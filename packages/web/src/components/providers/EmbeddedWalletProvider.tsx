@@ -11,10 +11,20 @@
  * Privy requires Wagmi to sit *inside* both Privy and Query contexts, so the order
  * is not interchangeable.
  *
- * `embeddedWallets.createOnLogin: 'users-without-wallets'` is the key knob: a
- * wallet is minted only for users who don't already have one connected. A
- * customer who connects their own MetaMask is left untouched — that satisfies the
- * "never affect an existing wallet" requirement.
+ * Login is Google/email ONLY — deliberately NO 'wallet' method. An external
+ * wallet (MetaMask) shows its OWN confirmation popup on every transaction, which
+ * no app setting can suppress, and it would also tie the visit receipt to the
+ * MetaMask address so the review would have to be signed there too. By offering
+ * only social login we guarantee every customer is on the Privy embedded wallet
+ * end-to-end (receipt minted to it, review signed by it), which is the only way
+ * to make the whole flow popup-free.
+ *
+ * `embeddedWallets.createOnLogin: 'all-users'` then guarantees that wallet always
+ * exists (no external wallet can be linked now, so there's nothing to "preserve"),
+ * and `showWalletUIs: false` makes it sign and send transactions silently — no
+ * confirmation modal. Safe because the only transaction the app ever sends is
+ * `ReviewRegistry.submit` for the review the customer just wrote; we never sign
+ * arbitrary payloads on their behalf.
  */
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -32,10 +42,12 @@ export function EmbeddedWalletProvider({ children }: { children: ReactNode }) {
     <PrivyProvider
       appId={PRIVY_APP_ID}
       config={{
-        // Customer-friendly logins; 'wallet' keeps crypto-native users first-class.
-        loginMethods: ['google', 'email', 'wallet'],
-        // Create the hidden wallet only when the user has none of their own.
-        embeddedWallets: { createOnLogin: 'users-without-wallets' },
+        // Social login ONLY — no 'wallet'. This is what keeps the flow popup-free:
+        // an external wallet (MetaMask) always shows its own unsuppressable confirm.
+        loginMethods: ['google', 'email'],
+        // Always create the hidden wallet, and sign/send its transactions silently
+        // (no confirmation modal) so the review submit has no wallet popup at all.
+        embeddedWallets: { createOnLogin: 'all-users', showWalletUIs: false },
         defaultChain: arbitrumSepolia,
         supportedChains: [arbitrumSepolia],
       }}
