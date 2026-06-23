@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount, useChainId, usePublicClient, useWriteContract } from 'wagmi';
-import { computeContentHash, reviewRegistryAbi, ARBITRUM_SEPOLIA_CHAIN_ID } from '@vr/shared';
-import { registryAddress, isChainConfigured } from '@/lib/contracts';
+import { computeContentHash } from '@vr/shared';
+import { isChainConfigured } from '@/lib/contracts';
 import { ingestReview } from '@/lib/api';
 import { reviewErrorMessage } from '@/lib/reviewErrors';
 import { txUrl, shortHex } from '@/lib/explorer';
@@ -11,20 +10,23 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Button } from '@/components/ui/Button';
 import { StarPicker } from './StarPicker';
 import { isPrivyEnabled } from '@/lib/wagmi.privy';
+import { useReviewSubmit } from '@/lib/reviewSubmit';
+import { useVisitEligibility } from '@/hooks/useVisitEligibility';
+import { NeedsVisitProof, VisitTooOld, AlreadyReviewed, VerifiedBanner } from './ReviewGuidance';
+import { Loading } from '@/components/ui/StatusStates';
 
 type Phase = 'idle' | 'busy' | 'done' | 'error';
 
 /**
  * Customer review form. Computes the canonical content hash (shared with the API
- * so its hash-mismatch check agrees), submits it on-chain via the connected
- * wallet, then ingests the text once the tx confirms. Gasless when a Privy
- * paymaster is configured; otherwise the wallet pays.
+ * so its hash-mismatch check agrees), submits it on-chain via {@link useReviewSubmit}
+ * — which signs through the Privy embedded wallet silently — then ingests the text
+ * once the tx confirms. Gas is covered by the testnet top-up the API sends at mint
+ * time, so submitting feels like any web form: no popup, no fee.
  */
 export function ReviewForm({ businessId }: { businessId: number }) {
-  const { address, isConnected } = useAccount();
-  const chainId = useChainId();
-  const publicClient = usePublicClient();
-  const { writeContractAsync } = useWriteContract();
+  const { signerAddress, ready, submit: submitReview } = useReviewSubmit();
+  const eligibility = useVisitEligibility(businessId, signerAddress);
 
   const [rating, setRating] = useState(0);
   const [text, setText] = useState('');
@@ -33,12 +35,10 @@ export function ReviewForm({ businessId }: { businessId: number }) {
   const [error, setError] = useState('');
   const [txHash, setTxHash] = useState('');
 
-  const wrongChain = isConnected && chainId !== ARBITRUM_SEPOLIA_CHAIN_ID;
-  const canSubmit =
-    isConnected && !wrongChain && isChainConfigured && rating >= 1 && text.trim().length > 0;
+  const canSubmit = ready && isChainConfigured && rating >= 1 && text.trim().length > 0;
 
   async function submit() {
-    if (!address) return;
+    if (!signerAddress) return;
     setError('');
     setPhase('busy');
     try {
@@ -46,28 +46,20 @@ export function ReviewForm({ businessId }: { businessId: number }) {
       const trimmed = text.trim();
       const contentHash = computeContentHash({
         businessId,
-        reviewer: address,
+        reviewer: signerAddress,
         rating,
         text: trimmed,
         nonce,
       });
 
-      setStep('Confirm in your wallet…');
-      const hash = await writeContractAsync({
-        address: registryAddress(),
-        abi: reviewRegistryAbi,
-        functionName: 'submit',
-        args: [BigInt(businessId), contentHash, rating],
-      });
+      setStep('Posting your review…');
+      const hash = await submitReview({ businessId, contentHash, rating });
       setTxHash(hash);
-
-      setStep('Recording on-chain…');
-      if (publicClient) await publicClient.waitForTransactionReceipt({ hash });
 
       setStep('Saving your review…');
       await ingestReview({
         businessId,
-        reviewer: address,
+        reviewer: signerAddress,
         rating,
         text: trimmed,
         nonce,
@@ -89,15 +81,21 @@ export function ReviewForm({ businessId }: { businessId: number }) {
       </Notice>
     );
   }
-  if (!isConnected) {
+  if (!ready) {
     return isPrivyEnabled ? (
       <PrivyLoginPrompt />
     ) : (
       <Notice>Connect your wallet (top right) to write a verified review.</Notice>
     );
   }
-  if (wrongChain) {
-    return <Notice>Switch your wallet to Arbitrum Sepolia to submit a review.</Notice>;
+  // Guide the customer by their on-chain eligibility — but never block a submit
+  // already in flight or a finished one (those phases own the UI below). The
+  // contract stays the real gate; 'unknown' falls through to the form.
+  if (phase === 'idle') {
+    if (eligibility.state === 'loading') return <Loading label="Checking your visit…" />;
+    if (eligibility.state === 'no-proof') return <NeedsVisitProof />;
+    if (eligibility.state === 'too-old') return <VisitTooOld />;
+    if (eligibility.state === 'already-reviewed') return <AlreadyReviewed />;
   }
   if (phase === 'done') {
     return (
@@ -124,6 +122,7 @@ export function ReviewForm({ businessId }: { businessId: number }) {
   const busy = phase === 'busy';
   return (
     <div className="flex flex-col gap-5">
+      {eligibility.state === 'eligible' && <VerifiedBanner />}
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-ink">Your rating</span>
         <StarPicker value={rating} onChange={setRating} disabled={busy} />

@@ -11,7 +11,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { isPrivyEnabled } from '@/lib/wagmi.privy';
 
@@ -19,10 +19,15 @@ export function WalletQr() {
   return isPrivyEnabled ? <PrivyWalletQr /> : <RainbowKitWalletQr />;
 }
 
-/** Privy path: prompt social sign-in, then show the embedded wallet's address. */
+/** Privy path: prompt social sign-in, then show the embedded wallet's address.
+ * We read the address from the EMBEDDED wallet (not useAccount) so the QR staff
+ * scan is exactly the wallet that will sign the review — otherwise the receipt is
+ * minted to one address and the review page checks another, and eligibility never
+ * clears. */
 function PrivyWalletQr() {
   const { ready, authenticated, login } = usePrivy();
-  const { address } = useAccount();
+  const { wallets } = useWallets();
+  const address = wallets.find((w) => w.walletClientType === 'privy')?.address;
 
   if (!ready) return <Skeleton />;
   if (!authenticated) {

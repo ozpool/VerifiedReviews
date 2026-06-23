@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAccount, useChainId } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { usePrivy } from '@privy-io/react-auth';
@@ -41,6 +42,14 @@ function PrivyStatus() {
   const wrongChain = chainId !== ARBITRUM_SEPOLIA_CHAIN_ID;
   return (
     <div className="flex items-center gap-3">
+      {/* Once signed in, the visit-code hand-off is always one tap away — staff
+          scan this to mint the receipt that unlocks a verified review. */}
+      <Link
+        href="/wallet"
+        className="text-sm font-medium text-ink border border-border rounded px-3.5 py-1.5 hover:bg-subtle transition-colors"
+      >
+        Show your code
+      </Link>
       {address && (
         <span className="text-xs text-muted font-mono hidden sm:block">
           {address.slice(0, 6)}…{address.slice(-4)}
