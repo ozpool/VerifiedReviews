@@ -23,3 +23,20 @@ packages/web/out/
 # misc
 .DS_Store
 coverage/
+
+# Local-only tooling configs and scratch docs (not part of the product)
+CLAUDE.md
+archi.md
+git.md
+AGENTS.md
+GEMINI.md
+.cursorrules
+.cursor/
+.aider*
+.windsurfrules
+.claude/
+.github/copilot-instructions.md
+
+# Local one-off debug scripts
+packages/api/src/scripts/diag-*.ts
+packages/api/src/scripts/reset-password.ts
