@@ -39,6 +39,20 @@ const config: Config = {
         18: '4.5rem',
         22: '5.5rem',
       },
+      keyframes: {
+        fadeUp: {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        fadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+      },
+      animation: {
+        'fade-up': 'fadeUp 0.3s ease both',
+        'fade-in': 'fadeIn 0.2s ease both',
+      },
     },
   },
   plugins: [],

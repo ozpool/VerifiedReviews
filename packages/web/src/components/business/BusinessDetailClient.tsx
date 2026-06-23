@@ -86,18 +86,26 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
         )}
       </header>
 
-      {/* Verified stats strip */}
-      <div className="flex flex-wrap items-center gap-x-8 gap-y-4 border-y border-border py-5">
-        <div className="flex items-center gap-3">
-          <span className="font-display text-4xl font-bold tabular-nums text-ink">
+      {/* Avg rating hero */}
+      <div className="border-y border-border py-7 flex flex-wrap items-center gap-x-10 gap-y-6">
+        {/* Big number + stars */}
+        <div className="flex items-end gap-4">
+          <span className="font-display text-6xl font-bold tabular-nums leading-none text-ink">
             {badge ? badge.avgRating.toFixed(1) : '—'}
           </span>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5 pb-1">
             <RatingStars rating={badge?.avgRating ?? 0} />
-            <span className="text-xs text-muted">average rating</span>
+            <span className="text-xs text-muted">out of 5</span>
           </div>
         </div>
+
+        {/* Divider */}
+        <div className="hidden sm:block w-px h-12 bg-border" aria-hidden="true" />
+
+        {/* Verified count stamp */}
         <VerifiedStamp count={badge?.count ?? 0} />
+
+        {/* CTA — pushed to the right */}
         <Link
           href={`/b/${business.slug}/write`}
           className="ml-auto inline-flex items-center gap-2 bg-accent text-paper px-5 py-2.5 rounded text-sm font-medium tracking-wide hover:bg-accent-light transition-colors"
@@ -135,8 +143,8 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
           />
         ) : (
           <div className="flex flex-col">
-            {reviews.map((r) => (
-              <ReviewCard key={r.txHash} review={r} />
+            {reviews.map((r, i) => (
+              <ReviewCard key={r.txHash} review={r} index={i} />
             ))}
           </div>
         )}
