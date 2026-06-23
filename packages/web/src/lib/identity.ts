@@ -8,8 +8,31 @@
  * stable and repeatable rather than truly random.
  */
 
-export const PATTERNS = ['arcs', 'grid', 'waves', 'scatter', 'rays', 'bloom', 'checker'] as const;
-export const MASCOTS = ['fox', 'cat', 'owl', 'rabbit'] as const;
+export const PATTERNS = [
+  'arcs',
+  'grid',
+  'waves',
+  'scatter',
+  'rays',
+  'bloom',
+  'checker',
+  'petals',
+  'rings',
+  'weave',
+  'confetti',
+] as const;
+export const MASCOTS = [
+  'fox',
+  'cat',
+  'owl',
+  'rabbit',
+  'bear',
+  'panda',
+  'frog',
+  'penguin',
+  'deer',
+  'hedgehog',
+] as const;
 export const VIBES = [
   'Cozy',
   'Bright',
@@ -23,6 +46,10 @@ export const VIBES = [
   'Classic',
   'Snug',
   'Vivid',
+  'Modern',
+  'Rustic',
+  'Airy',
+  'Quirky',
 ] as const;
 
 export type PatternKind = (typeof PATTERNS)[number];
@@ -77,10 +104,10 @@ export function identityFor(slug: string): Identity {
   const hue = Math.floor(rng() * 360);
   // Constrain saturation/lightness so every identity sits harmoniously on the
   // warm paper background — never neon, never muddy.
-  const ink = `hsl(${hue} 48% 42%)`;
-  const tone = `hsl(${hue} 42% 62%)`;
-  const wash = `hsl(${hue} 46% 91%)`;
-  const glow = `hsl(${hue} 60% 97%)`;
+  const ink = `hsl(${hue} 65% 40%)`;
+  const tone = `hsl(${hue} 60% 55%)`;
+  const wash = `hsl(${hue} 52% 89%)`;
+  const glow = `hsl(${hue} 64% 97%)`;
   const pattern = pick(rng, PATTERNS);
   const mascot = pick(rng, MASCOTS);
   // Two distinct adjectives for the personality tag.

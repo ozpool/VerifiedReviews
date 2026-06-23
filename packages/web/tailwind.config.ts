@@ -68,6 +68,24 @@ const config: Config = {
           '35%': { transform: 'translateY(-16px) scale(1.08)' },
           '60%': { transform: 'translateY(0) scale(0.94)' },
         },
+        // A quick full spin (used on click celebration).
+        mascotSpin: {
+          '0%': { transform: 'rotate(0)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
+        // A springy double bounce.
+        mascotBounce: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '30%': { transform: 'translateY(-12px)' },
+          '55%': { transform: 'translateY(0)' },
+          '78%': { transform: 'translateY(-5px)' },
+        },
+        // A little forward nod.
+        mascotNod: {
+          '0%, 100%': { transform: 'rotate(0) translateY(0)' },
+          '35%': { transform: 'rotate(9deg) translateY(2px)' },
+          '65%': { transform: 'rotate(-5deg)' },
+        },
         // Click sparkle: fly out along --dx/--dy, fade, shrink.
         sparkle: {
           from: { transform: 'translate(0,0) scale(1)', opacity: '1' },
@@ -86,6 +104,9 @@ const config: Config = {
         'mascot-hop': 'mascotHop 0.5s ease',
         'mascot-wiggle': 'mascotWiggle 0.5s ease',
         'mascot-jump': 'mascotJump 0.6s ease',
+        'mascot-spin': 'mascotSpin 0.7s ease-in-out',
+        'mascot-bounce': 'mascotBounce 0.7s ease',
+        'mascot-nod': 'mascotNod 0.6s ease',
         sparkle: 'sparkle 0.65s ease-out forwards',
         'pattern-drift': 'patternDrift 12s ease-in-out infinite',
       },
