@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ApiError } from '@/lib/api';
+import { loginErrorMessage } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 
 const input =
@@ -31,11 +31,7 @@ export function LoginForm({
     try {
       await onLogin(email, password);
     } catch (err) {
-      setError(
-        err instanceof ApiError && err.status === 401
-          ? 'Wrong email or password.'
-          : 'Login failed. Please try again.',
-      );
+      setError(loginErrorMessage(err));
     } finally {
       setBusy(false);
     }

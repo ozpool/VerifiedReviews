@@ -114,7 +114,7 @@ describe('owner login + staff management', () => {
     await request(app)
       .post('/auth/business/login')
       .send({ email: 'owner@sushi.test', password: 'super-secret' })
-      .expect(401);
+      .expect(403);
   });
 
   it('lets an owner log in once approved', async () => {
@@ -197,6 +197,6 @@ describe('approval requires on-chain minter registration', () => {
     await request(app)
       .post('/auth/business/login')
       .send({ email: 'owner@taco.test', password: 'super-secret' })
-      .expect(401);
+      .expect(403);
   });
 });

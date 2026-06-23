@@ -10,7 +10,7 @@ import { BusinessModel } from '../models/business.model';
 import { StaffModel } from '../models/staff.model';
 import { validateBody } from './../middleware/validate';
 import { loadConfig } from '../config';
-import { unauthorized } from '../errors';
+import { unauthorized, forbidden } from '../errors';
 import { linkPrivyIdentity } from '../services/customer.service';
 
 export const authRouter = Router();
@@ -86,13 +86,16 @@ authRouter.post('/auth/business/login', validateBody(loginSchema), async (req, r
   try {
     const { email, password } = req.body as z.infer<typeof loginSchema>;
     const business = await BusinessModel.findOne({ ownerEmail: email.toLowerCase() });
-    if (
-      !business ||
-      business.status !== 'approved' ||
-      business.businessId === undefined ||
-      !(await verifyPassword(password, business.ownerPasswordHash))
-    ) {
-      throw unauthorized('Invalid credentials or business not approved');
+    // 401 for genuine bad credentials — unknown email and wrong password are
+    // deliberately indistinguishable so we don't reveal which emails exist.
+    if (!business || !(await verifyPassword(password, business.ownerPasswordHash))) {
+      throw unauthorized('Wrong email or password');
+    }
+    // Correct password but not approved → distinct 403, so the owner sees the
+    // real reason instead of a misleading "wrong password". Approval status is
+    // only revealed after a correct password, so it never leaks to outsiders.
+    if (business.status !== 'approved' || business.businessId === undefined) {
+      throw forbidden('Your business is awaiting admin approval');
     }
     const token = signToken(
       { sub: business.id, role: 'owner', businessId: business.businessId },
@@ -108,10 +111,12 @@ authRouter.post('/auth/business/login', validateBody(loginSchema), async (req, r
 authRouter.post('/auth/staff/login', validateBody(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body as z.infer<typeof loginSchema>;
-    const staff = await StaffModel.findOne({ email: email.toLowerCase(), active: true });
+    const staff = await StaffModel.findOne({ email: email.toLowerCase() });
     if (!staff || !(await verifyPassword(password, staff.passwordHash))) {
-      throw unauthorized('Invalid credentials');
+      throw unauthorized('Wrong email or password');
     }
+    // Correct password but the owner deactivated this account → clear 403.
+    if (!staff.active) throw forbidden('This staff account has been deactivated');
     const business = await BusinessModel.findOne({ businessId: staff.businessId }, 'slug').lean();
     const token = signToken(
       { sub: staff.id, role: 'staff', businessId: staff.businessId },

@@ -25,6 +25,23 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Map a login failure to a user-facing message. A 403 carries a specific reason
+ * (e.g. "awaiting admin approval", "deactivated") in its body — surface that so
+ * the user isn't misled into thinking the password is wrong. A 401 is genuine
+ * bad credentials.
+ */
+export function loginErrorMessage(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status === 403) {
+      const msg = (err.body as { message?: string } | null)?.message;
+      return msg ?? "This account can't sign in yet.";
+    }
+    if (err.status === 401) return 'Wrong email or password.';
+  }
+  return 'Login failed. Please try again.';
+}
+
 type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown;
   token?: string;
