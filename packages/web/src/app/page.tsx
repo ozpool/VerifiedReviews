@@ -67,6 +67,13 @@ export default function HomePage() {
               How it works
             </Link>
           </div>
+
+          <Link
+            href="/wallet"
+            className="text-sm text-muted hover:text-ink transition-colors w-fit"
+          >
+            At a checkout now? Show your visit code →
+          </Link>
         </section>
 
         <hr className="border-border" />
