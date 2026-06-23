@@ -7,6 +7,8 @@ import { fetchBusiness, fetchBadge, fetchReviews, ApiError } from '@/lib/api';
 import { RatingStars } from './RatingStars';
 import { VerifiedStamp } from './VerifiedStamp';
 import { ReviewCard } from './ReviewCard';
+import { BusinessPattern } from './BusinessPattern';
+import { Mascot } from './Mascot';
 import { Loading, Empty, ErrorState } from '@/components/ui/StatusStates';
 import { safeHttpUrl } from '@/lib/url';
 
@@ -60,6 +62,16 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
 
   return (
     <div className="flex flex-col gap-10">
+      {/* Identity hero: this business's generative pattern with its mascot
+          wandering along the bottom while you read. */}
+      <div className="relative -mt-2 h-32 sm:h-40 rounded-lg overflow-hidden border border-border">
+        <BusinessPattern slug={business.slug} className="absolute inset-0 h-full w-full" />
+        <Mascot
+          slug={business.slug}
+          className="absolute bottom-1 left-3 [--wander:clamp(0px,60vw,520px)]"
+        />
+      </div>
+
       {/* Profile header */}
       <header className="flex flex-col gap-4">
         <div className="flex items-center gap-3">

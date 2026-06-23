@@ -48,10 +48,22 @@ const config: Config = {
           from: { opacity: '0' },
           to: { opacity: '1' },
         },
+        // Mascot: a gentle idle bob + tilt …
+        mascotBob: {
+          '0%, 100%': { transform: 'translateY(0) rotate(-3deg)' },
+          '50%': { transform: 'translateY(-5px) rotate(3deg)' },
+        },
+        // … layered over a slow side-to-side wander across its strip.
+        mascotWander: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '50%': { transform: 'translateX(var(--wander, 200px))' },
+        },
       },
       animation: {
         'fade-up': 'fadeUp 0.3s ease both',
         'fade-in': 'fadeIn 0.2s ease both',
+        'mascot-bob': 'mascotBob 2.4s ease-in-out infinite',
+        'mascot-wander': 'mascotWander 13s ease-in-out infinite',
       },
     },
   },
