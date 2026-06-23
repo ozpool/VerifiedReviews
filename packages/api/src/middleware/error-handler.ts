@@ -19,6 +19,16 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     });
     return;
   }
+  // Framework / body-parser errors carry their own 4xx status (e.g. a 413 for an
+  // oversized body, or a 400 for malformed JSON). Honour it rather than masking
+  // a client mistake as a 500.
+  const status =
+    (err as { status?: number; statusCode?: number }).status ??
+    (err as { statusCode?: number }).statusCode;
+  if (typeof status === 'number' && status >= 400 && status < 500) {
+    res.status(status).json({ error: (err as Error).name || 'RequestError' });
+    return;
+  }
   // Unknown error: log server-side, return an opaque 500.
   console.error(err);
   res.status(500).json({ error: 'InternalServerError' });
