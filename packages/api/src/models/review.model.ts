@@ -21,6 +21,7 @@ export interface ReviewDoc {
   blockNumber: number;
   sentiment: Sentiment;
   confirmed: boolean;
+  hidden: boolean;
 }
 
 const reviewSchema = new Schema<ReviewDoc>(
@@ -37,6 +38,9 @@ const reviewSchema = new Schema<ReviewDoc>(
     blockNumber: { type: Number, default: 0 },
     sentiment: { type: String, enum: ['positive', 'neutral', 'negative'], default: 'neutral' },
     confirmed: { type: Boolean, default: false, index: true },
+    // Set by admin moderation ("hide"); excluded from search + badge counts.
+    // The chain stays the source of truth — this only affects what we surface.
+    hidden: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
@@ -44,7 +48,10 @@ const reviewSchema = new Schema<ReviewDoc>(
 // Full-text search over review bodies (the search endpoint).
 reviewSchema.index({ text: 'text' });
 // Replay idempotency: a given on-chain log can finalize exactly one review.
-reviewSchema.index({ txHash: 1, logIndex: 1 }, { unique: true, partialFilterExpression: { confirmed: true } });
+reviewSchema.index(
+  { txHash: 1, logIndex: 1 },
+  { unique: true, partialFilterExpression: { confirmed: true } },
+);
 
 export const ReviewModel =
   (models.Review as Model<ReviewDoc>) ?? model<ReviewDoc>('Review', reviewSchema);

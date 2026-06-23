@@ -1,5 +1,6 @@
 import type { Review } from '@/lib/api';
 import { RatingStars } from './RatingStars';
+import { FlagButton } from './FlagButton';
 import { txUrl, shortHex } from '@/lib/explorer';
 
 const SENTIMENT_STYLES: Record<Review['sentiment'], string> = {
@@ -79,6 +80,9 @@ export function ReviewCard({ review, index = 0 }: { review: Review; index?: numb
               <span className="font-mono text-muted">{shortHex(review.txHash, 8, 6)}</span>
               <span aria-hidden="true">↗</span>
             </a>
+            <div className="ml-auto">
+              <FlagButton reviewId={review._id} />
+            </div>
           </div>
         </div>
       </div>

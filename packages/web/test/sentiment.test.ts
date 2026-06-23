@@ -3,6 +3,7 @@ import { summarizeSentiment, percent } from '@/lib/sentiment';
 import type { Review } from '@/lib/api';
 
 const review = (sentiment: Review['sentiment']): Review => ({
+  _id: 'r1',
   businessId: 1,
   reviewer: '0x0',
   rating: 5,
