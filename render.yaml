@@ -10,8 +10,11 @@ services:
     runtime: node
     plan: free
     # Build from the repo root so pnpm can resolve the workspace (@vr/shared).
+    # Install pnpm via npm rather than corepack — corepack's bundled signing keys
+    # are stale on some Node 20.18 images and fail to verify. The API runs via tsx
+    # (a runtime dependency), so install is the whole build; no compile step.
     rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    buildCommand: npm install -g pnpm@9.15.0 && pnpm install --frozen-lockfile
     startCommand: pnpm --filter @vr/api start
     # /ready returns 200 only once Mongo is connected, so a bad MONGO_URI fails
     # the deploy visibly instead of serving a broken API.
