@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Fraunces, DM_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers/Providers';
@@ -25,21 +25,16 @@ export const metadata: Metadata = {
   },
   description:
     'On-chain reviews gated by a real purchase receipt. No fakes. No incentivised posts.',
-  metadataBase: new URL(
-    process.env['NEXT_PUBLIC_APP_URL'] ?? 'http://localhost:3000',
-  ),
+  metadataBase: new URL(process.env['NEXT_PUBLIC_APP_URL'] ?? 'http://localhost:3000'),
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const viewport: Viewport = {
+  themeColor: '#F9F6F1',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${fraunces.variable} ${dmSans.variable}`}
-    >
+    <html lang="en" className={`${fraunces.variable} ${dmSans.variable}`}>
       <body className="font-sans bg-paper text-ink min-h-screen">
         <Providers>{children}</Providers>
       </body>
