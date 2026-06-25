@@ -169,4 +169,38 @@ export const FIGURES: Record<MascotKind, ReactNode> = {
       />
     </g>
   ),
+  koala: (
+    <g>
+      <circle cx="11" cy="16" r="7" fill="currentColor" />
+      <circle cx="33" cy="16" r="7" fill="currentColor" />
+      <circle cx="11" cy="16" r="3.4" fill={PAPER} />
+      <circle cx="33" cy="16" r="3.4" fill={PAPER} />
+      <circle cx="22" cy="25" r="14" fill="currentColor" />
+      {eye(16, 24)}
+      {eye(28, 24)}
+      <ellipse cx="22" cy="30" rx="4.4" ry="5.4" fill={INK} />
+    </g>
+  ),
+  lion: (
+    <g>
+      {Array.from({ length: 12 }, (_, i) => {
+        const a = (i / 12) * Math.PI * 2;
+        return (
+          <circle
+            key={i}
+            cx={22 + Math.cos(a) * 15}
+            cy={24 + Math.sin(a) * 15}
+            r="5.2"
+            fill="currentColor"
+          />
+        );
+      })}
+      <circle cx="22" cy="24" r="12" fill="currentColor" />
+      {eye(17, 22)}
+      {eye(27, 22)}
+      <ellipse cx="22" cy="29" rx="5" ry="3.6" fill={PAPER} />
+      <polygon points="22,26.5 19.6,28.5 24.4,28.5" fill={INK} />
+      <path d="M22 29 L22 31" stroke={INK} strokeWidth="1.1" strokeLinecap="round" />
+    </g>
+  ),
 };

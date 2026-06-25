@@ -2,15 +2,22 @@ import { identityFor, type Identity } from '@/lib/identity';
 import { Motif } from './businessMotifs';
 
 /**
- * A generative banner unique to each business. Pure SVG, seeded by slug, tinted
- * to the business's identity colour.
+ * A generative banner unique to each business. Pure SVG, seeded by slug.
  *
- * The background is a rich two-hue gradient (the business hue blended into an
- * analogous neighbour) that's vivid at the TOP and fades to a light wash at the
- * BOTTOM — so the header reads as a colourful, eye-catching strip while the lower
- * band stays pale enough for the dark mascot to pop where it roams. A soft
- * top-left sheen adds depth. Pass `ambient` on the detail hero to drift the motif.
+ * Monochrome by design: the strip is the warm paper tone with a faint top sheen,
+ * and the seeded motif is drawn in charcoal ink. Colour is deliberately removed
+ * from the background so the business's tinted mascot is the one bright thing that
+ * pops against it. Distinction between businesses comes from the *pattern* (and the
+ * animal), not from a loud gradient. Pass `ambient` on the detail hero to drift it.
  */
+
+// Fixed ink palette — same for every business. Tuned to read crisply on paper.
+const PATTERN_TONES = {
+  ink: '#38352D', // strong strokes / figures
+  tone: '#A89F92', // mid-weight fills
+  glow: '#5B554A', // focal points (kept monochrome, not the brand accent)
+} as const;
+
 export function BusinessPattern({
   slug,
   identity,
@@ -23,11 +30,9 @@ export function BusinessPattern({
   className?: string;
 }) {
   const id = identity ?? identityFor(slug ?? '');
-  const gid = `vr-grad-${id.seed}`;
+  // Drive placement/pattern from the real identity, but force monochrome tones.
+  const mono: Identity = { ...id, ...PATTERN_TONES };
   const sid = `vr-sheen-${id.seed}`;
-  const h = id.hue;
-  const hA = (h + 40) % 360; // a vivid analogous neighbour
-  const hB = (h + 340) % 360; // and one the other way — a richer 3-hue sweep
 
   return (
     <svg
@@ -37,21 +42,18 @@ export function BusinessPattern({
       className={className}
     >
       <defs>
-        <linearGradient id={gid} x1="0" y1="0" x2="0.42" y2="1">
-          <stop offset="0" stopColor={`hsl(${h} 85% 60%)`} />
-          <stop offset="0.45" stopColor={`hsl(${hA} 80% 66%)`} />
-          <stop offset="1" stopColor={`hsl(${hB} 74% 86%)`} />
-        </linearGradient>
-        <radialGradient id={sid} cx="0.22" cy="0.06" r="0.95">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.5" />
-          <stop offset="0.6" stopColor="#ffffff" stopOpacity="0" />
+        <radialGradient id={sid} cx="0.2" cy="0.0" r="1.1">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="0.7" stopColor="#ffffff" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <rect x="0" y="0" width="120" height="48" fill={`url(#${gid})`} />
-      <rect x="0" y="0" width="120" height="48" fill={`url(#${sid})`} />
+      {/* Warm paper base, a touch deeper than the card so the strip has presence. */}
+      <rect x="0" y="0" width="120" height="48" fill="#F1ECE3" />
       <g className={ambient ? 'animate-pattern-drift motion-reduce:animate-none' : undefined}>
-        <Motif identity={id} />
+        <Motif identity={mono} />
       </g>
+      {/* Soft top-left sheen over the motif for a little depth. */}
+      <rect x="0" y="0" width="120" height="48" fill={`url(#${sid})`} />
     </svg>
   );
 }

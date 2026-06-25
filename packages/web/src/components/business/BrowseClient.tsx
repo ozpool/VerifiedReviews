@@ -29,8 +29,13 @@ export function BrowseClient() {
     queryKey: ['badges', ids],
     enabled: ids.length > 0,
     queryFn: async () => {
-      const badges = await Promise.all(ids.map((id) => fetchBadge(id)));
-      return Object.fromEntries(badges.map((b) => [b.businessId, b])) as Record<number, Badge>;
+      // allSettled so a single bad badge doesn't blank every card's rating.
+      const results = await Promise.allSettled(ids.map((id) => fetchBadge(id)));
+      const map: Record<number, Badge> = {};
+      for (const r of results) {
+        if (r.status === 'fulfilled') map[r.value.businessId] = r.value;
+      }
+      return map;
     },
   });
 

@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { ApiHealth } from '@/components/ui/ApiHealth';
 
 /** Shared footer. Staff and business portal links live here — out of the customer's way. */
 export function SiteFooter() {
@@ -14,7 +13,6 @@ export function SiteFooter() {
           <Link href="/scan" className="hover:text-ink transition-colors">
             Staff login
           </Link>
-          <ApiHealth />
         </div>
       </div>
     </footer>

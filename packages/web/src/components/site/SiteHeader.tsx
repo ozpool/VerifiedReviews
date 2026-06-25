@@ -22,6 +22,9 @@ export function SiteHeader() {
           <Link href="/#how" className="hover:text-ink transition-colors">
             How it works
           </Link>
+          <Link href="/docs" className="hover:text-ink transition-colors">
+            Docs
+          </Link>
         </nav>
         <WalletStatus />
       </div>
