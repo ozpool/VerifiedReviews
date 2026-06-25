@@ -32,6 +32,8 @@ export const MASCOTS = [
   'penguin',
   'deer',
   'hedgehog',
+  'koala',
+  'lion',
 ] as const;
 export const VIBES = [
   'Cozy',

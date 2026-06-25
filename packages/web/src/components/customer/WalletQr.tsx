@@ -83,9 +83,22 @@ function QrCard({ address }: { address: string }) {
   }, [address]);
 
   async function copy() {
-    await navigator.clipboard.writeText(address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard API can reject (insecure context / denied permission) — fall
+      // back to selecting the text so the user can copy it manually.
+      const sel = window.getSelection();
+      const range = document.createRange();
+      const node = document.querySelector(`[data-addr="${address}"]`);
+      if (node && sel) {
+        range.selectNodeContents(node);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
   }
 
   return (
@@ -101,7 +114,9 @@ function QrCard({ address }: { address: string }) {
         aria-label={`QR code of your wallet address ${address}`}
       />
       <div className="flex flex-col items-center gap-2 w-full">
-        <code className="text-xs text-ink font-mono break-all text-center">{address}</code>
+        <code data-addr={address} className="text-xs text-ink font-mono break-all text-center">
+          {address}
+        </code>
         <button
           onClick={copy}
           className="text-xs text-accent hover:text-accent-light transition-colors"
