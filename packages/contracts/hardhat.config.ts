@@ -24,18 +24,10 @@ const config: HardhatUserConfig = {
     },
   },
   etherscan: {
-    // Arbiscan verification; key supplied via env in CI/local only.
-    apiKey: { arbitrumSepolia: process.env.ARBISCAN_API_KEY ?? '' },
-    customChains: [
-      {
-        network: 'arbitrumSepolia',
-        chainId: 421614,
-        urls: {
-          apiURL: 'https://api-sepolia.arbiscan.io/api',
-          browserURL: 'https://sepolia.arbiscan.io',
-        },
-      },
-    ],
+    // Etherscan V2 multichain endpoint: one key verifies on every supported
+    // chain (Arbitrum Sepolia 421614 included), routed by chainId. Supply the
+    // key via env in CI/local only. ARBISCAN_API_KEY kept as a legacy fallback.
+    apiKey: process.env.ETHERSCAN_API_KEY ?? process.env.ARBISCAN_API_KEY ?? '',
   },
 };
 

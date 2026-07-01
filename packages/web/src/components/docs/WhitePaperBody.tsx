@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { addressUrl } from '@/lib/explorer';
 import { SECTIONS } from './sections';
 
 /**
@@ -49,7 +50,7 @@ export function WhitePaperBody() {
           </h1>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-muted">
             How VerifiedReviews uses a non-transferable, point-of-sale receipt to make every
-            published review provably real — and why the rule that enforces it lives in a smart
+            published review provably real - and why the rule that enforces it lives in a smart
             contract, not a server.
           </p>
           <dl className="mt-8 flex flex-wrap gap-x-10 gap-y-3 text-sm">
@@ -94,14 +95,14 @@ export function WhitePaperBody() {
         <SectionTitle eyebrow="The short version">Executive Summary</SectionTitle>
         <div className="space-y-4 text-base leading-relaxed text-muted">
           <p>
-            Online reviews are the closest thing commerce has to a reputation system — and they are
+            Online reviews are the closest thing commerce has to a reputation system - and they are
             wide open to fakes, paid posts, and review farms. The root problem is simple: nothing
             proves the reviewer ever actually visited.
           </p>
           <p>
             VerifiedReviews closes that gap with a <strong className="text-ink">receipt</strong>. At
-            checkout, staff mint a <strong className="text-ink">soulbound token</strong> — a
-            non-transferable proof of a real visit — straight to the customer&apos;s wallet. To post
+            checkout, staff mint a <strong className="text-ink">soulbound token</strong> - a
+            non-transferable proof of a real visit - straight to the customer&apos;s wallet. To post
             a review, the on-chain contract checks that the author still holds a receipt and that it
             is recent. No receipt, no review. You can&apos;t buy it, borrow it, or fake it.
           </p>
@@ -122,7 +123,7 @@ export function WhitePaperBody() {
             five-star praise, and bots posting reviews for places they&apos;ve never set foot in.
           </p>
           <p>
-            Every existing platform fights this the same way — moderation, machine-learning filters,
+            Every existing platform fights this the same way - moderation, machine-learning filters,
             &ldquo;verified purchase&rdquo; badges backed by a private database you have to trust.
             The badge is only as honest as the company behind it, and the company has every
             incentive to keep engagement high.
@@ -130,7 +131,7 @@ export function WhitePaperBody() {
           <p>
             We take a different route: make the proof{' '}
             <em className="text-ink">public and unforgeable</em>, and put the rule that checks it
-            somewhere no one — not even us — can quietly override.
+            somewhere no one - not even us - can quietly override.
           </p>
         </div>
       </section>
@@ -140,13 +141,13 @@ export function WhitePaperBody() {
         <SectionTitle eyebrow="Where this fits">Market Opportunity</SectionTitle>
         <div className="space-y-4 text-base leading-relaxed text-muted">
           <p>
-            Online reviews are among the most influential signals in local commerce — for many
+            Online reviews are among the most influential signals in local commerce - for many
             shoppers a star rating settles the decision before they read a single word. That
             influence is exactly why review fraud is so persistent: paid five-star posts, bot farms,
             and competitor sabotage are a well-documented problem across every major platform.
           </p>
           <p>
-            Incumbents — Yelp, Google, and Trustpilot — fight it with internal machine-learning
+            Incumbents - Yelp, Google, and Trustpilot - fight it with internal machine-learning
             moderation and &ldquo;verified purchase&rdquo; badges backed by private databases only
             they can see. The badge is only as trustworthy as the company asserting it.
           </p>
@@ -158,7 +159,7 @@ export function WhitePaperBody() {
           </p>
           <p className="text-sm text-muted/80">
             We don&apos;t cite a precise market figure here because we&apos;d rather publish a
-            sourced one than a guessed one — sizing will land in a future revision with citations.
+            sourced one than a guessed one - sizing will land in a future revision with citations.
           </p>
         </div>
       </section>
@@ -172,7 +173,7 @@ export function WhitePaperBody() {
             [
               '01',
               'Pay & get a receipt',
-              'At checkout, staff scan your wallet and mint a soulbound token on-chain — a visit proof locked to you, forever.',
+              'At checkout, staff scan your wallet and mint a soulbound token on-chain - a visit proof locked to you, forever.',
             ],
             [
               '02',
@@ -199,7 +200,7 @@ export function WhitePaperBody() {
           The rule that must not break: the gate lives in the contract
         </h3>
         <p className="mt-3 text-base leading-relaxed text-muted">
-          The website and API exist purely for convenience — search, nice pages, a place to store
+          The website and API exist purely for convenience - search, nice pages, a place to store
           the review text. They are <strong className="text-ink">never a security boundary</strong>.
           A review counts only when{' '}
           <code className="rounded bg-subtle px-1.5 py-0.5 text-sm">ReviewRegistry</code> accepts it
@@ -213,7 +214,7 @@ export function WhitePaperBody() {
         </h3>
         <p className="mt-3 text-base leading-relaxed text-muted">
           A normal NFT can be sold or sent away. A <strong className="text-ink">soulbound</strong>{' '}
-          token can&apos;t — transfers revert by design. That property is the whole point: if a
+          token can&apos;t - transfers revert by design. That property is the whole point: if a
           visit proof could move between wallets, a single real visit could mint reviews for a
           thousand accounts. Locking it to one wallet makes &ldquo;one visit, one voice&rdquo;
           enforceable in code.
@@ -230,7 +231,7 @@ export function WhitePaperBody() {
         </p>
 
         <Pull>
-          Faking a review here means faking a blockchain transaction — which you can&apos;t.
+          Faking a review here means faking a blockchain transaction - which you can&apos;t.
         </Pull>
       </section>
 
@@ -238,14 +239,14 @@ export function WhitePaperBody() {
       <section id="edge-cases" className="scroll-mt-24">
         <SectionTitle eyebrow="Where it bends">Edge Cases &amp; Failure Modes</SectionTitle>
         <p className="mb-6 text-base leading-relaxed text-muted">
-          An honest system names its own seams. Here are the ones we know about — including the one
+          An honest system names its own seams. Here are the ones we know about - including the one
           place where &ldquo;the chain proves it&rdquo; is really &ldquo;the chain proves what staff
           told it.&rdquo;
         </p>
         <ul className="space-y-5">
           <li>
             <p className="font-display font-semibold text-ink">
-              Staff integrity at the point of sale — the real trust boundary
+              Staff integrity at the point of sale - the real trust boundary
             </p>
             <p className="mt-1 text-base leading-relaxed text-muted">
               The contract proves a visit proof <em className="text-ink">exists</em>; it does not
@@ -253,7 +254,7 @@ export function WhitePaperBody() {
               assigned minter, so a dishonest staffer could in principle mint a receipt to a friend
               with no real sale. There is currently no binding to a POS transaction (e.g. a minimum
               amount). What the gate does is move trust from &ldquo;an anonymous internet
-              stranger&rdquo; down to &ldquo;the business&apos;s own till&rdquo; — it narrows the
+              stranger&rdquo; down to &ldquo;the business&apos;s own till&rdquo; - it narrows the
               boundary, it does not erase it. A POS-amount binding is a candidate future
               integration.
             </p>
@@ -261,7 +262,7 @@ export function WhitePaperBody() {
           <li>
             <p className="font-display font-semibold text-ink">One receipt, one review</p>
             <p className="mt-1 text-base leading-relaxed text-muted">
-              Each visit proof can back at most one review — the registry records{' '}
+              Each visit proof can back at most one review - the registry records{' '}
               <code className="rounded bg-subtle px-1.5 py-0.5 text-sm">reviewed[tokenId]</code> and
               reverts{' '}
               <code className="rounded bg-subtle px-1.5 py-0.5 text-sm">AlreadyReviewed</code> on a
@@ -272,8 +273,8 @@ export function WhitePaperBody() {
           <li>
             <p className="font-display font-semibold text-ink">Lost wallet</p>
             <p className="mt-1 text-base leading-relaxed text-muted">
-              A visit proof is soulbound to one wallet. If a customer loses access, the receipt —
-              and the ability to review that visit — is gone permanently. There is no transfer or
+              A visit proof is soulbound to one wallet. If a customer loses access, the receipt -
+              and the ability to review that visit - is gone permanently. There is no transfer or
               recovery path, by design.
             </p>
           </li>
@@ -281,7 +282,7 @@ export function WhitePaperBody() {
             <p className="font-display font-semibold text-ink">Real but adversarial reviews</p>
             <p className="mt-1 text-base leading-relaxed text-muted">
               Soulbound + recency stops <em className="text-ink">fake</em> visits; it doesn&apos;t
-              stop a <em className="text-ink">real but bad-faith</em> one — a competitor who makes
+              stop a <em className="text-ink">real but bad-faith</em> one - a competitor who makes
               one small purchase specifically to post a hit piece. This is a known limitation, not a
               gap we missed: the system proves a recent visit, not good faith. Public flagging
               handles abuse off-chain without rewriting the on-chain record.
@@ -307,7 +308,7 @@ export function WhitePaperBody() {
           </li>
           <li>
             <strong className="text-ink">Minter wallet.</strong> The only privileged server secret.
-            It can mint receipts and nothing else — it cannot forge, hide, or alter a review.
+            It can mint receipts and nothing else - it cannot forge, hide, or alter a review.
           </li>
         </ul>
         <p className="mt-4 text-base leading-relaxed text-muted">
@@ -342,14 +343,14 @@ export function WhitePaperBody() {
         <SectionTitle eyebrow="How it sustains">Business Model</SectionTitle>
         <div className="space-y-4 text-base leading-relaxed text-muted">
           <p>
-            Shoppers never pay to read or write a review — the customer side is free and will stay
+            Shoppers never pay to read or write a review - the customer side is free and will stay
             free. The intended revenue surface is the business side: paid access to receipt-minting,
             for example a per-location subscription or a per-receipt fee.
           </p>
           <p>
             The exact pricing is <strong className="text-ink">not yet finalised</strong> and will be
             published before mainnet. There is deliberately no token, no resale market, and no fee
-            charged to reviewers — so that no economic incentive can distort the reviews themselves.
+            charged to reviewers - so that no economic incentive can distort the reviews themselves.
           </p>
         </div>
       </section>
@@ -360,24 +361,24 @@ export function WhitePaperBody() {
         <ol className="space-y-5">
           {[
             [
-              'Phase 1 — Core protocol',
+              'Core protocol',
               'Complete',
               'VisitProof soulbound receipts, the ReviewRegistry gate, the 60-day recency check, and off-chain search + moderation.',
             ],
             [
-              'Phase 2 — Security hardening',
+              'Security hardening',
               'Planned · pre-mainnet',
               'Third-party audit, admin role moved to a multisig, and documented minter-key custody.',
             ],
             [
-              'Phase 3 — Mainnet',
+              'Mainnet',
               'Planned',
               'Arbitrum mainnet deployment, business onboarding flow, and finalised pricing.',
             ],
-          ].map(([phase, status, body]) => (
-            <li key={phase} className="flex flex-col gap-1 border-l-2 border-border pl-5">
+          ].map(([title, status, body]) => (
+            <li key={title} className="flex flex-col gap-1 border-l-2 border-border pl-5">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="font-display font-semibold text-ink">{phase}</span>
+                <span className="font-display font-semibold text-ink">{title}</span>
                 <span className="rounded-sm border border-border px-2 py-0.5 text-[11px] font-medium uppercase tracking-widest text-muted">
                   {status}
                 </span>
@@ -445,14 +446,29 @@ export function WhitePaperBody() {
         <SectionTitle eyebrow="Reference data">Appendix</SectionTitle>
 
         <h3 className="font-display text-lg font-semibold text-ink">Deployed contracts</h3>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          Both contracts are verified on Arbiscan - source and read/write tabs are public. Click an
+          address to open it on the explorer.
+        </p>
         <dl className="mt-3 space-y-3">
-          {[
-            ['VisitProof (soulbound receipt)', SBT_ADDRESS],
-            ['ReviewRegistry (the gate)', REGISTRY_ADDRESS],
-          ].map(([label, addr]) => (
+          {(
+            [
+              ['VisitProof (soulbound receipt)', SBT_ADDRESS],
+              ['ReviewRegistry (the gate)', REGISTRY_ADDRESS],
+            ] as [string, string][]
+          ).map(([label, addr]) => (
             <div key={addr} className="flex flex-col gap-1">
               <dt className="text-xs uppercase tracking-widest text-muted">{label}</dt>
-              <dd className="break-all font-mono text-sm text-ink">{addr}</dd>
+              <dd>
+                <a
+                  href={addressUrl(addr)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="break-all font-mono text-sm text-ink underline decoration-border underline-offset-4 transition-colors hover:decoration-accent"
+                >
+                  {addr}
+                </a>
+              </dd>
             </div>
           ))}
         </dl>
@@ -474,7 +490,7 @@ export function WhitePaperBody() {
             ],
             [
               'Minter wallet',
-              'The only privileged server secret. It can mint receipts — nothing else.',
+              'The only privileged server secret. It can mint receipts - nothing else.',
             ],
           ].map(([term, def]) => (
             <div key={term as string}>
