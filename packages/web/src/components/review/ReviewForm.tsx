@@ -5,7 +5,6 @@ import { computeContentHash } from '@vr/shared';
 import { isChainConfigured } from '@/lib/contracts';
 import { ingestReview } from '@/lib/api';
 import { reviewErrorMessage } from '@/lib/reviewErrors';
-import { txUrl, shortHex } from '@/lib/explorer';
 import { usePrivy } from '@privy-io/react-auth';
 import { Button } from '@/components/ui/Button';
 import { StarPicker } from './StarPicker';
@@ -14,6 +13,8 @@ import { useReviewSubmit } from '@/lib/reviewSubmit';
 import { useVisitEligibility } from '@/hooks/useVisitEligibility';
 import { NeedsVisitProof, VisitTooOld, AlreadyReviewed, VerifiedBanner } from './ReviewGuidance';
 import { Loading } from '@/components/ui/StatusStates';
+import { savePendingReview } from '@/lib/pendingReview';
+import { PendingReviewCard } from '@/components/business/PendingReviewCard';
 
 type Phase = 'idle' | 'busy' | 'done' | 'error';
 
@@ -67,6 +68,16 @@ export function ReviewForm({ businessId }: { businessId: number }) {
         txHash: hash,
       });
 
+      // Show it back to the customer immediately — the indexer can take a
+      // minute or two, but there's no reason the submitter should wait on it
+      // just to see their own words.
+      savePendingReview({
+        businessId,
+        reviewer: signerAddress,
+        rating,
+        text: trimmed,
+        txHash: hash,
+      });
       setPhase('done');
     } catch (err) {
       setError(reviewErrorMessage(err));
@@ -99,22 +110,13 @@ export function ReviewForm({ businessId }: { businessId: number }) {
   }
   if (phase === 'done') {
     return (
-      <div className="border-2 border-dashed border-accent rounded p-6 flex flex-col gap-2">
+      <div className="border-2 border-dashed border-accent rounded p-6 flex flex-col gap-4">
         <p className="font-display font-semibold text-ink">Review submitted ✓</p>
-        <p className="text-sm text-muted leading-relaxed">
-          It&apos;s on-chain now and will appear on this page once the indexer confirms it (usually
-          a minute or two).
+        <PendingReviewCard rating={rating} text={text.trim()} txHash={txHash} />
+        <p className="text-xs text-muted leading-relaxed">
+          It&apos;s on-chain now — the pending tag clears on its own once the indexer confirms it
+          (usually a minute or two).
         </p>
-        {txHash && (
-          <a
-            href={txUrl(txHash)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-accent hover:text-accent-light w-fit"
-          >
-            View transaction {shortHex(txHash, 8, 6)} ↗
-          </a>
-        )}
       </div>
     );
   }
