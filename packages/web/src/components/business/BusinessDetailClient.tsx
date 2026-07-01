@@ -1,17 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchBusiness, fetchBadge, fetchReviews, ApiError } from '@/lib/api';
 import { RatingStars } from './RatingStars';
 import { VerifiedStamp } from './VerifiedStamp';
 import { ReviewCard } from './ReviewCard';
+import { PendingReviewCard } from './PendingReviewCard';
 import { BusinessPattern } from './BusinessPattern';
 import { Mascot } from './Mascot';
 import { Loading, Empty, ErrorState } from '@/components/ui/StatusStates';
 import { safeHttpUrl } from '@/lib/url';
 import { identityFor } from '@/lib/identity';
+import { getPendingReview, clearPendingReview, type PendingReview } from '@/lib/pendingReview';
 
 /**
  * Business detail: profile, the on-chain-verified count + average, and the
@@ -41,6 +43,21 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
     queryFn: () => fetchReviews(businessId!, q || undefined),
   });
 
+  // A review the customer just submitted, echoed back before the indexer
+  // confirms it — see packages/web/src/lib/pendingReview.ts.
+  const [pending, setPending] = useState<PendingReview | null>(null);
+  useEffect(() => {
+    if (businessId === undefined) return;
+    setPending(getPendingReview(businessId));
+  }, [businessId]);
+  useEffect(() => {
+    if (!pending || !reviewsQuery.data) return;
+    if (reviewsQuery.data.some((r) => r.txHash === pending.txHash)) {
+      clearPendingReview(pending.businessId);
+      setPending(null);
+    }
+  }, [pending, reviewsQuery.data]);
+
   if (businessQuery.isPending) return <Loading label="Loading business…" />;
   if (businessQuery.isError) {
     const notFound = businessQuery.error instanceof ApiError && businessQuery.error.status === 404;
@@ -58,6 +75,13 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
 
   const badge = badgeQuery.data;
   const reviews = reviewsQuery.data ?? [];
+  // Skip the pending echo while the customer is searching (it isn't a search
+  // result) or once the confirmed list already carries the same tx.
+  const showPending =
+    !q &&
+    pending &&
+    pending.businessId === businessId &&
+    !reviews.some((r) => r.txHash === pending.txHash);
   // Only ever link out to a validated http(s) URL — rejects javascript:/data: etc.
   const website = safeHttpUrl(business.websiteUrl);
   const id = identityFor(business.slug);
@@ -146,7 +170,7 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
           <Loading label="Loading reviews…" />
         ) : reviewsQuery.isError ? (
           <ErrorState message="Couldn't load reviews." retry={() => reviewsQuery.refetch()} />
-        ) : reviews.length === 0 ? (
+        ) : reviews.length === 0 && !showPending ? (
           <Empty
             title={q ? 'No matching reviews' : 'No verified reviews yet'}
             description={
@@ -157,6 +181,13 @@ export function BusinessDetailClient({ slug }: { slug: string }) {
           />
         ) : (
           <div className="flex flex-col">
+            {showPending && pending && (
+              <PendingReviewCard
+                rating={pending.rating}
+                text={pending.text}
+                txHash={pending.txHash}
+              />
+            )}
             {reviews.map((r, i) => (
               <ReviewCard key={r.txHash} review={r} index={i} />
             ))}
