@@ -12,10 +12,10 @@ the people who run the service.
 
 |                    |                                                                                                                 |
 | ------------------ | --------------------------------------------------------------------------------------------------------------- |
+| **Live demo**      | [verified-reviews-web.vercel.app](https://verified-reviews-web.vercel.app/)                                     |
 | **Network**        | Arbitrum Sepolia (testnet)                                                                                      |
 | **Core primitive** | Soulbound receipt (ERC-5192)                                                                                    |
 | **Recency window** | 60 days                                                                                                         |
-| **Status**         | Feature-complete on testnet; unaudited; pre-mainnet                                                             |
 | **VisitProofSBT**  | [`0x6827…34e6`](https://sepolia.arbiscan.io/address/0x682735379eC9718234bB545A7a33c6428ec134e6#code) (verified) |
 | **ReviewRegistry** | [`0x9B5c…09aD`](https://sepolia.arbiscan.io/address/0x9B5cAEfa84FD1E2eC1d23E2E0fdA8B9b9F5409aD#code) (verified) |
 
@@ -23,6 +23,7 @@ the people who run the service.
 
 ## Contents
 
+- [Live demo](#live-demo)
 - [How it works](#how-it-works)
 - [The rule that defines the project](#the-rule-that-defines-the-project)
 - [Architecture](#architecture)
@@ -31,12 +32,18 @@ the people who run the service.
 - [Deployed contracts](#deployed-contracts)
 - [Getting started](#getting-started)
 - [Testing](#testing)
-- [Project status](#project-status)
 - [Security and audit status](#security-and-audit-status)
 - [Contributing](#contributing)
 - [License](#license)
 
 ---
+
+## Live demo
+
+The full flow runs live on Arbitrum Sepolia: **[verified-reviews-web.vercel.app](https://verified-reviews-web.vercel.app/)**.
+Browse businesses, open a business page, and sign in to see the frictionless
+review path (Google/email sign-in, no wallet or gas required). Staff minting
+requires an approved business account.
 
 ## How it works
 
@@ -185,7 +192,7 @@ pnpm -F @vr/api seed:admin    # uses ADMIN_EMAIL / ADMIN_PASSWORD
 ```bash
 pnpm -r typecheck             # type-check shared, api, web
 pnpm -r test                  # run shared + contracts + api suites
-pnpm -r lint                  # ESLint across all workspaces
+pnpm lint                     # ESLint across the whole monorepo
 ```
 
 Tests are organised around the security boundary. The contract suite is the most
@@ -194,30 +201,20 @@ and the exact 60-day recency boundaries (60d passes, 60d + 1s reverts). The API
 suite covers auth tampering and expiry, rate limits, tx-revert-no-write,
 hash-mismatch rejection, indexer replay idempotency, and HMAC tampering.
 
-## Project status
-
-| Area                | Scope                                              | State   |
-| ------------------- | -------------------------------------------------- | ------- |
-| Foundation          | Monorepo, shared schemas, CI                       | Done    |
-| Smart contracts     | VisitProofSBT, ReviewRegistry, deploy, verified    | Done    |
-| Backend API         | Auth, onboarding, mint, indexer, search, badge     | Done    |
-| Frontend            | Public, customer, staff, business, and admin flows | Done    |
-| Hardening + mainnet | Audit, multisig admin, mainnet deployment          | Planned |
-
-The application is feature-complete on Arbitrum Sepolia. A third-party audit and a
-minter-key hardening pass are planned before any mainnet deployment.
-
 ## Security and audit status
 
-VerifiedReviews runs on **Arbitrum Sepolia (testnet)** and has **not** undergone a
-third-party security audit. `VisitProofSBT` and `ReviewRegistry` should be treated
-as experimental and not used to secure anything of value.
+The application is feature-complete end to end on Arbitrum Sepolia: contracts,
+API, and frontend all ship the full customer, staff, business, and admin flows.
+
+It runs on **Arbitrum Sepolia (testnet)** and has **not** undergone a third-party
+security audit. `VisitProofSBT` and `ReviewRegistry` should be treated as
+experimental and not used to secure anything of value.
 
 The single point of trust in an otherwise trustless design is the minter wallet:
 it can mint receipts and nothing else. The contract proves a visit proof exists, not
 that a purchase happened behind it, so point-of-sale staff integrity is the real
-trust boundary. Before mainnet, the admin role moves behind a multisig and
-minter-key custody is documented.
+trust boundary. Before mainnet, the admin role moves behind a multisig, minter-key
+custody is documented, and a third-party audit runs.
 
 To report a vulnerability, open a private security advisory on the GitHub
 repository rather than a public issue.
@@ -230,7 +227,7 @@ repository rather than a public issue.
 - The maintainer reviews and merges with a merge commit; contributors do not merge
   or close issues themselves.
 
-Run `pnpm -r lint && pnpm -r typecheck && pnpm -r test` and make sure everything is
+Run `pnpm lint && pnpm -r typecheck && pnpm -r test` and make sure everything is
 green before opening a pull request.
 
 ## License
